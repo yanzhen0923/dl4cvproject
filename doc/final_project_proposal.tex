@@ -1,0 +1,93 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage{cvpr}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% Include other packages here, before hyperref.
+
+% If you comment hyperref and then uncomment it, you should delete
+% egpaper.aux before re-running latex.  (Or just hit 'q' on the first latex
+% run, let it finish, and you should be clear).
+\usepackage[pagebackref=true,breaklinks=true,letterpaper=true,colorlinks,bookmarks=false]{hyperref}
+
+\cvprfinalcopy % *** Uncomment this line for the final submission
+
+\def\cvprPaperID{****} % *** Enter the CVPR Paper ID here
+\def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
+
+% Pages are numbered in submission mode, and unnumbered in camera-ready
+\ifcvprfinal\pagestyle{empty}\fi
+\begin{document}
+
+%%%%%%%%% TITLE
+\title{Replace with your project title}
+
+\author{Team Member 1\\
+{\tt\small first@i1.org}
+\and
+Team Member 2\\
+{\tt\small second@i1.org}
+\and
+Team Member 3\\
+{\tt\small third@i1.org}
+\and
+Team Member 4\\
+{\tt\small fourth@i1.org}
+%\and
+%Team Member 5\\
+%{\tt\small fifth@i1.org}
+}
+
+
+\maketitle
+%\thispagestyle{empty}
+
+%
+% Proposal I
+%
+\section*{Project Proposal}
+The following bullet points and remarks are meant to guide through the process of writing this proposal. Nevertheless we expect a coherent text.
+
+\section{Introduction}
+    Explain your general idea and state the problem you are trying to solve.
+
+    \subsection{Related Works}
+        \begin{itemize}
+            \item Related and previous work on your topic
+            \item A small overview of the SOTA (state-of-the-art)
+            \item What is new/different in your approach?
+            \item $\dots$
+        \end{itemize}
+
+\section{Dataset}
+    \begin{itemize}
+        \item Are you working with an existing dataset or is data collection part of your project?
+        \item Explain the general nature of your data (show examples if beneficial) and provide information how you collected your dataset
+        \item Does your data provide the labels necessary for training?
+        \item Explain possible problems with the dataset
+        \item What are your inputs and outputs?
+        \item $\dots$
+    \end{itemize}
+
+\section{Methodology}
+    Describe all the different phases/components/steps on how you are planning to solve your previously stated problem. Try to give us a clear picture of your methodology and remember that the project's focus is on deep learning. Try to elaborate on the following points:
+    \begin{itemize}
+        \item Network architecture(s)
+        \item Transfer learning and training from scratch
+        \item Resource management (please consider GPU memory)
+        \item $\dots$
+    \end{itemize}
+
+\section{Outcome}
+    What is your desired outcome or aspiration for the project?
+
+{\small
+\bibliographystyle{ieee}
+\bibliography{bib}
+}
+
+\end{document}
