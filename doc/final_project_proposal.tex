@@ -24,18 +24,18 @@
 \begin{document}
 
 %%%%%%%%% TITLE
-\title{Disease Type Prediction}
+\title{Disease Type Prediction(hackerearth deep learning challenge \#2)}
 
-\author{Team Member 1\\
-{\tt\small first@i1.org}
+\author{Yumin Sun\\
+{\tt\small suny@in.tum.de}
 \and
-Team Member 2\\
-{\tt\small second@i1.org}
+Zhen Yan\\
+{\tt\small zhen.yan@tum.de}
 \and
-Team Member 3\\
-{\tt\small third@i1.org}
+Yuchang Zhang\\
+{\tt\small ga63jof@mytum.de }
 \and
-Team Member 4\\
+Xiaojing Li\\
 {\tt\small fourth@i1.org}
 %\and
 %Team Member 5\\
@@ -50,40 +50,24 @@ Team Member 4\\
 % Proposal I
 %
 \section*{Project Proposal}
-The following bullet points and remarks are meant to guide through the process of writing this proposal. Nevertheless we expect a coherent text.
+We are doing the challenge presented \href{https://www.hackerearth.com/challenge/competitive/deep-learning-challenge-2/machine-learning/yes-a-question/}{here}.
 
 \section{Introduction}
-    Explain your general idea and state the problem you are trying to solve.
-
+	Disease type diagnosis from X-rays is of low-cost and simple. However, lack of experienced doctors and high miss misdiagnosed rates makes it a challenge. We are trying to solve this problem using deep learning as well as classical machine learning techniques, with over 10,000 labeled data.
+	
     \subsection{Related Works}
         \begin{itemize}
-            \item Related and previous work on your topic
-            \item A small overview of the SOTA (state-of-the-art)
-            \item What is new/different in your approach?
-            \item $\dots$
+            \item Learning to Read Chest X-Ray Images from 16000+ Examples Using CNN \cite{dong2017learning}
         \end{itemize}
 
 \section{Dataset}
-    \begin{itemize}
-        \item Are you working with an existing dataset or is data collection part of your project?
-        \item Explain the general nature of your data (show examples if beneficial) and provide information how you collected your dataset
-        \item Does your data provide the labels necessary for training?
-        \item Explain possible problems with the dataset
-        \item What are your inputs and outputs?
-        \item $\dots$
-    \end{itemize}
+We are using the dataset provided by hackerearth. The training data is split into two parts. One with X-ray pictures and disease labels. This other one includes general information of the patients, i.e., gender and age.
 
 \section{Methodology}
-    Describe all the different phases/components/steps on how you are planning to solve your previously stated problem. Try to give us a clear picture of your methodology and remember that the project's focus is on deep learning. Try to elaborate on the following points:
-    \begin{itemize}
-        \item Network architecture(s)
-        \item Transfer learning and training from scratch
-        \item Resource management (please consider GPU memory)
-        \item $\dots$
-    \end{itemize}
+We are planning to try different pre-trained models combined with out own self-defined layers. Apart from that, we are also planning to use general patient information as additional inputs 
 
 \section{Outcome}
-    What is your desired outcome or aspiration for the project?
+    Try to achieve over 75\% accuracy on test data, try to reach a score over 0.5 (Currently the best core is about 0.38).
 
 {\small
 \bibliographystyle{ieee}
