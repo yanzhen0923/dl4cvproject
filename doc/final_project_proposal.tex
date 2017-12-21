@@ -50,7 +50,8 @@ Xiaojing Li\\
 % Proposal I
 %
 \section*{Project Proposal}
-We are doing the challenge presented \href{https://www.hackerearth.com/challenge/competitive/deep-learning-challenge-2/machine-learning/yes-a-question/}{here}.
+We are doing the challenge presented \href{https://www.hackerearth.com/challenge/competitive/deep-learning-challenge-2/machine-learning/yes-a-question/}{here}. Cited from its introduction page:
+\emph{Chest X-ray exam is one of the most frequent and cost-effective medical imaging examination. However clinical diagnosis of chest X-ray can be challenging, and sometimes believed to be harder than diagnosis via chest CT imaging. To achieve clinically relevant computer-aided detection and diagnosis (CAD) in real world medical sites on all data settings of chest X-rays is still very difficult, if not impossible when only several thousands of images are employed for study. Started in 1953, National Institute of Health - Clinical Centre is one the leading hospitals in US. They are the active partners in medical discovery. Currently, there are around 1600 clinical research studies in progress at NIH centre, USA. With a support staff of around 620 nurses, in 2016, they handled more than 10,400 new patient}
 
 \section{Introduction}
 	Disease type diagnosis from X-rays is of low-cost and simple. However, lack of experienced doctors and high miss misdiagnosed rates makes it a challenge. We are trying to solve this problem using deep learning as well as classical machine learning techniques, with over 10,000 labeled data.
@@ -61,10 +62,17 @@ We are doing the challenge presented \href{https://www.hackerearth.com/challenge
         \end{itemize}
 
 \section{Dataset}
-We are using the dataset provided by hackerearth. The training data is split into two parts. One with X-ray pictures and disease labels. This other one includes general information of the patients, i.e., gender and age.
+We are using the dataset provided by hackerearth. The training data is split into two parts. One with X-ray pictures and disease labels. This other one includes general information of the patients, i.e., gender and age. The are 14 types of different diseases in total.
+
+\begin{itemize}
+	\item Images:  The training image data has information for 18577 patients and testing image data has information for 12386 patients. Each row of data has one X-ray image and its disease label.
+	\item Text in CSV format: Same size as image data. Each row of data has 6 rows, i.e., row id, age, gender, view position, image\_name, detected.
+\end{itemize}
 
 \section{Methodology}
-We are planning to try different pre-trained models combined with out own self-defined layers. Apart from that, we are also planning to use general patient information as additional inputs 
+We are planning to try different pre-trained models combined with out own self-defined layers. Apart from that, we are also planning to use general patient information as additional inputs.
+
+For the pre-trained models, we are going to try alexnet, vgg16 and resnet101, by not freezing the pre-trained parameters but keeping the original architecture. The project \href{https://github.com/ayush1997/Xvision}{here} could be out first trial.
 
 \section{Outcome}
     Try to achieve over 75\% accuracy on test data, try to reach a score over 0.5 (Currently the best core is about 0.38).
