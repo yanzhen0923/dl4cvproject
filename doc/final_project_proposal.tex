@@ -74,11 +74,10 @@ We are using the dataset provided by hackerearth. The training data is split int
 
 \section{Methodology}
 We are planning to try different pre-trained models combined with out own self-defined layers. Apart from that, we are also planning to use general patient information as additional inputs.
-
-For the pre-trained models, we are going to try alexnet, vgg16 and resnet101, by not freezing the pre-trained parameters but keeping the original architecture. The project \href{https://github.com/ayush1997/Xvision}{here} could be out first trial.
+For the pre-trained models, we are going to try alexnet, densenet and resnet101, by not freezing the first fews layers of the parameters for feature extraction, then delete weights feeding for the rest layers, then train the weights with our own datasets. The project \href{https://github.com/ayush1997/Xvision}{here} could be out first trial.
 
 \section{Outcome}
-    Try to achieve over 75\% accuracy on test data, try to reach a score over 0.5 (Currently the best core is about 0.38).
+    Try to achieve over 70\% accuracy on test data, try to reach a score over 0.5 (Currently the best core is about 0.38).
 
 {\small
 \bibliographystyle{ieee}
