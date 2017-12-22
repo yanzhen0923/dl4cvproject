@@ -59,6 +59,9 @@ We are doing the challenge presented \href{https://www.hackerearth.com/challenge
     \subsection{Related Works}
         \begin{itemize}
             \item Learning to Read Chest X-Ray Images from 16000+ Examples Using CNN \cite{dong2017learning}
+             \item Deep convolutional neural networks for computer-aided detection: CNN architectures, dataset characteristics and transfer learning \cite{shin2016deep}
+              \item Dermatologist-level classification of skin cancer with deep neural networks
+              \cite{esteva2017dermatologist}
         \end{itemize}
 
 \section{Dataset}
@@ -66,7 +69,7 @@ We are using the dataset provided by hackerearth. The training data is split int
 
 \begin{itemize}
 	\item Images:  The training image data has information for 18577 patients and testing image data has information for 12386 patients. Each row of data has one X-ray image and its disease label. Each image has size 1024*1024*3 with png format.
-	\item Text in CSV format: Same size as image data. Each row of data has 6 rows, i.e., row id, age, gender, view position, image\_name, detected.
+	\item Text in CSV format: Same size as image data. Each row of data has 6 rows, i.e., row id, age, gender, view position, image\_name, detected disease.
 \end{itemize}
 
 \section{Methodology}
