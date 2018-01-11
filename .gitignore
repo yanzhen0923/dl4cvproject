@@ -13,5 +13,4 @@ doc/*.bbl
 doc/*.blg
 doc/*.brf
 doc/*.synctex.gz
-data/train_/
-data/test_/
+data/
