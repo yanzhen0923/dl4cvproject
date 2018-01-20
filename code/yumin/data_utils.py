@@ -83,8 +83,14 @@ def get_Cancer_datasets(csv_full_name,
     mean = np.mean(each_mean,axis = 0)
     std = np.std(X,axis=(0, 2, 3))
     
-    train_tf = transforms.Compose(transforms.ColorJitter(),
-                                  transforms.Normalize(mean,std))
+    #train_tf = transforms.Compose(transforms.ColorJitter(),
+    #                              transforms.Normalize(mean,std))
+    train_tf = transforms.Normalize(mean,std)
+    # index after data augmentation
+    # TODO
+    #
+    
+    class_fractions = []
 
     print('Done normalization...')
         
