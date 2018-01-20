@@ -1,6 +1,6 @@
 """Data utility functions."""
 import os
-
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.utils.data as data
@@ -41,7 +41,61 @@ class CancerData(data.Dataset):
     def __len__(self):
         return len(self.y)
 
-#def data_augmentation(data,labels,transform):
+def data_augmentation(data,fractions):
+
+    plt.rcParams['figure.figsize'] = (10.0, 8.0)  # set default size of plots
+    plt.rcParams['image.interpolation'] = 'nearest'
+    plt.rcParams['image.cmap'] = 'gray'
+
+    original_length = len(data)
+
+    transform = transforms.Compose([transforms.ToPILImage()])
+
+    transform1 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.4,contrast = 0.1),
+                                   transforms.RandomCrop(224), transforms.Resize(256)])
+    transform2 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness=0.6, contrast=0.3),
+                                     transforms.RandomCrop(224), transforms.Resize(256)])
+    transform3 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.2,contrast = 0.1),
+                                   transforms.RandomCrop(224), transforms.Resize(256)])
+    transform4 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.3,contrast = 0.5),
+                                   transforms.RandomCrop(224), transforms.Resize(256)])
+    transform5 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.7,contrast = 0.1),
+                                   transforms.RandomCrop(224), transforms.Resize(256)])
+    transform6 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.4,contrast = 0.2),
+                                   transforms.RandomCrop(224), transforms.Resize(256)])
+    transform7 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.4,contrast = 0.4),
+                                   transforms.RandomCrop(224), transforms.Resize(256)])
+    transform8 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.7,contrast = 0.7),
+                                   transforms.RandomCrop(224), transforms.Resize(256)])
+    transform9 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.3,contrast = 0.9),
+                                   transforms.RandomCrop(224), transforms.Resize(256)])
+    transform10 =transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.1,contrast = 0.1),
+                                   transforms.RandomCrop(224), transforms.Resize(256)])
+
+
+    TrsfmS = [transform1,transform2,transform3, transform4,transform5, transform6,transform7, transform8,transform9, transform10]
+
+    for i in range(original_length):
+        sample,label = data[i]
+        if fractions[label] < 0.05:
+            for trsfm in TrsfmS:
+            #aug_sample = np.array(transform1(sample))
+                aug_sample = np.array(trsfm(sample))
+                plt.imshow(aug_sample)
+                plt.show()
+                aug_sample.resize([1, 1, aug_sample.shape[0], aug_sample.shape[1]])
+                data.X = np.concatenate((data.X, aug_sample), axis=0)
+                data.y = np.append(data.y, label)
+
+            img = transform(sample)
+            plt.imshow(img)
+
+            plt.show()
+            print("=============================================")
+
+
+    return data
+
 
 
 
@@ -109,6 +163,10 @@ def get_Cancer_datasets(csv_full_name,
             break
         idx = idx + 1
 
+    for i in range(14):
+        class_statistics[i] = class_statistics[i]/total_GoodImg
+        print(class_statistics[i])
+
     y = np.array(label_list)
     print('label shape',y.shape)
     #y = y[good_mask]
@@ -138,7 +196,7 @@ def get_Cancer_datasets(csv_full_name,
     
     print('OK...')
 
-    return CancerData(X, y)
+    return CancerData(X, y),class_statistics
          # (CancerData(X_train, y_train),
             # CancerData(X_val, y_val),
             # CancerData(X_test, y_test),)
