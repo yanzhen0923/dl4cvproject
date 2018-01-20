@@ -1,21 +1,24 @@
 from random import shuffle
 import numpy as np
 import time
+from tqdm import tqdm
 
 import torch
 from torch.autograd import Variable
 
-
 class Solver(object):
-    default_adam_args = {"lr": 1e-4,
-                         "betas": (0.9, 0.999),
-                         "eps": 1e-8,
-                         "weight_decay": 1e-4}
 
     def __init__(self, optim=torch.optim.Adam, optim_args={},
                  loss_func=torch.nn.CrossEntropyLoss()):
+        self.default_adam_args = {"lr": 5e-7,
+                         "betas": (0.9, 0.999),
+                         "eps": 1e-8,
+                         "weight_decay": 1e-4}
+        
+        self.default_sgd_args = {"lr":1e-5, 
+                        "momentum":0.9}
         optim_args_merged = self.default_adam_args.copy()
-        optim_args_merged.update(optim_args)
+        #optim_args_merged.update(optim_args)
         self.optim_args = optim_args_merged
         self.optim = optim
         self.loss_func = loss_func
@@ -81,8 +84,7 @@ class Solver(object):
         last_acc = 0
         best_model = None
         # iterate over epochs
-        for epoch in range(num_epochs):
-
+        for epoch in tqdm(range(num_epochs)):
             # iterate first over training phase
             for phase in ['train', 'val']:
                 # don't train model during validation !
@@ -95,7 +97,7 @@ class Solver(object):
                 running_corrects = 0
 
                 # iterate over the corresponding data in each phase
-                for iter, data in enumerate(dataset_loader[phase]):
+                for iter, data in tqdm(enumerate(dataset_loader[phase])):
 
                     inputs, labels = data
                     # set gradients to zero for each mini_batch iteration !
