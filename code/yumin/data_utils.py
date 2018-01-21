@@ -41,7 +41,55 @@ class CancerData(data.Dataset):
     def __len__(self):
         return len(self.y)
 
+def norm_split_Data(aug_data):
+    print('Nomralize data ...')
+    mean = np.mean(aug_data.X)
+    print('mean:{}'.format(mean))
+    normData = aug_data.X - mean
+    std = np.std(aug_data.X,axis=(0,1,2,3))
+    #std = np.std(aug_data.X,axis=(0,2,3))
+    print('std:{}'.format(std))
+    normData = normData/std
+    print('Done nomralize data')
+
+    print('Splitting dataset...')
+
+    # Split the data set into Train,Val,Test with 0.8,0.1,0.1
+    y = aug_data.y
+    total = len(y)
+
+    num_training = total*0.8
+    num_training = int(np.ceil(num_training))
+
+    num_validation=total*0.1
+    num_validation = int(np.ceil(num_validation))
+
+    mask = range(num_training)
+    X_train = normData[mask]
+    y_train = y[mask]
+    mask = range(num_training, num_training + num_validation)
+    X_val = normData[mask]
+    y_val = y[mask]
+    mask = range(num_training + num_validation,total)
+    X_test = normData[mask]
+    y_test = y[mask]
+    print('OK...')
+
+    # return (CancerData(X_train,y_train),
+    #         CancerData(X_val,y_val),
+    #         CancerData(X_test,y_test))
+    return (CancerData(torch.from_numpy(X_train).float(), y_train),
+            CancerData(torch.from_numpy(X_val).float(), y_val),
+            CancerData(torch.from_numpy(X_test).float(), y_test),
+            y_train)
+
+
 def data_augmentation(data,fractions):
+
+    """
+       Augment image data.
+       Return all data incl. augmented data but without normalization.
+    """
 
     plt.rcParams['figure.figsize'] = (10.0, 8.0)  # set default size of plots
     plt.rcParams['image.interpolation'] = 'nearest'
@@ -96,20 +144,21 @@ def data_augmentation(data,fractions):
             #plt.show()
             print("=============================================")
 
+    if len(data.X != data.y):
+        print('Error in data augmentation, dimension of X and y not same')
+    else:
+        print('OK...')
     return data
-
-
-
-
 
 
 # train, val, test partition in folder train256
 # In total, 18577 images in train256
-def get_Cancer_datasets(csv_full_name,
+def read_Cancer_datasets(csv_full_name,
                         img_folder_full_name):
     
     """
     Load and preprocess the Cancer dataset.
+    Return class statistics and dataset without augmentation nor normalization.
     """
     csv = pd.read_csv(csv_full_name)
     
@@ -125,7 +174,10 @@ def get_Cancer_datasets(csv_full_name,
         img = scipy.misc.imread(fullname)
 
         if len(img.shape) == 2:
-            img_list.append(np.expand_dims(img, axis=0))
+            # repeat channels
+            one_channel_img = np.expand_dims(img, axis=0)
+            three_channel_img = np.repeat(one_channel_img, 3, axis=0)
+            img_list.append(three_channel_img)
             good_mask.append(True)
 
         else:
@@ -144,15 +196,13 @@ def get_Cancer_datasets(csv_full_name,
     X = np.array(img_list)
     print(X.shape,type(X))
     X = X / 255.0
+    #X = X.astype(float)
     print('Done Scale to [0,1]')
-    #each_mean = np.mean(X, axis=(2,3))
-    #mean = np.mean(each_mean,axis = 0)
-    #std = np.std(X,axis=(0, 2, 3))
 
     class_statistics = []
     for i in range(14):
         class_statistics.append(0)
-        print(class_statistics[i])
+        #print(class_statistics[i])
 
     label_list = []
     idx = 0
@@ -171,34 +221,7 @@ def get_Cancer_datasets(csv_full_name,
 
     y = np.array(label_list)
     print('label shape',y.shape)
-    #y = y[good_mask]
-    
-    # print('submasking...')
-    
-    # Subsample the data
-    #
-    # num_training=total_GoodImg*0.8
-    # num_training = int(np.ceil(num_training))
-    #
-    # num_validation=total_GoodImg*0.1
-    # num_validation = int(np.ceil(num_validation))
-    #
-    # num_test= total_GoodImg - num_training-num_validation
-    #
-    # mask = range(num_training)
-    # X_train = X[mask]
-    # y_train = y[mask]
-    # mask = range(num_training, num_training + num_validation)
-    # X_val = X[mask]
-    # y_val = y[mask]
-    # mask = range(num_training + num_validation,
-    #              num_training + num_validation + num_test)
-    # X_test = X[mask]
-    # y_test = y[mask]
-    
+
     print('OK...')
 
     return CancerData(X, y),class_statistics
-         # (CancerData(X_train, y_train),
-            # CancerData(X_val, y_val),
-            # CancerData(X_test, y_test),)
