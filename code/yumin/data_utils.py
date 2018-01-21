@@ -74,25 +74,27 @@ def data_augmentation(data,fractions):
 
 
     TrsfmS = [transform1,transform2,transform3, transform4,transform5, transform6,transform7, transform8,transform9, transform10]
-
+    #debug: range(10)
     for i in range(original_length):
         sample,label = data[i]
         if fractions[label] < 0.05:
-            for trsfm in TrsfmS:
-            #aug_sample = np.array(transform1(sample))
-                aug_sample = np.array(trsfm(sample))
-                plt.imshow(aug_sample)
-                plt.show()
+            print('augment image i = ',i)
+            # Test different transforms:
+            #for trsfm in TrsfmS:
+                #aug_sample = np.array(trsfm(sample))
+            # Select transform10 to do transform 10 times, add to data.
+            for j in range(10):
+                aug_sample = np.array(transform10(sample))
+                #plt.imshow(aug_sample)
+                #plt.show()
                 aug_sample.resize([1, 1, aug_sample.shape[0], aug_sample.shape[1]])
                 data.X = np.concatenate((data.X, aug_sample), axis=0)
                 data.y = np.append(data.y, label)
-
-            img = transform(sample)
-            plt.imshow(img)
-
-            plt.show()
+            # To show original image, convert to PIL image first
+            #img = transform(sample)
+            #plt.imshow(img)
+            #plt.show()
             print("=============================================")
-
 
     return data
 
