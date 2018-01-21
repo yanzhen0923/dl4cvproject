@@ -50,7 +50,7 @@ class Solver(object):
         dataset_loader['val'] = val_loader
         dset_sizes = {x: len(dataset_loader[x]) for x in ['train', 'val']}
         t = 0
-        optim = self.optim(model.parameters(), **self.optim_args)
+        optim = self.optim(model.classifier.parameters(), **self.optim_args)
         self._reset_histories()
         iter_per_epoch = len(train_loader)
         num_iterations = num_epochs * iter_per_epoch

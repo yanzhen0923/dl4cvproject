@@ -29,13 +29,42 @@ class CancerData(data.Dataset):
     def __init__(self, X, y):
         self.X = X
         self.y = y
+        self.mean = 0.48
+        self.std = 0.25
+        self.transform = Compose([
+                            ToPILImage(),
+                            RandomCrop(224),
+                            ColorJitter(brightness=0.2, contrast=0.2),
+                            ToTensor(),
+                            Normalize(mean=[self.mean, self.mean, self.mean], std=[self.std, self.std, self.std])
+                            ])
         
     def __getitem__(self, index):
-        # all data pre-processing are done before
-        return self.X[index], self.y[index]
+        #return self.X[index], self.y[index]
+        return self.transform(self.X[index]), self.y[index]
 
     def __len__(self):
         return len(self.y)
+    
+class CancerDataUpload(data.Dataset):
+
+    def __init__(self, X):
+        self.X = X
+        self.mean = 0.48
+        self.std = 0.25
+        self.transform = Compose([
+                            ToPILImage(),
+                            CenterCrop(224),
+                            ToTensor(),
+                            Normalize(mean=[self.mean, self.mean, self.mean], std=[self.std, self.std, self.std])
+                            ])
+        
+    def __getitem__(self, index):
+        #return self.X[index], self.y[index]
+        return self.transform(self.X[index])
+
+    def __len__(self):
+        return self.X.shape[0]
     
 def get_balanced_weights(label_list, num_classes):
     # count class appearance
@@ -47,7 +76,9 @@ def get_balanced_weights(label_list, num_classes):
     weight_per_class = [0.] * num_classes                                      
     N = float(sum(count))                                                   
     for i in range(num_classes):                                                   
-        weight_per_class[i] = N/float(count[i])
+        weight_per_class[i] = N/ (70 * np.sqrt(float(count[i])))
+        
+    print('weights: {}'.format(weight_per_class))
     
     #assign weights for each data entry
     weights = [0] * len(label_list)                                     
@@ -84,19 +115,18 @@ def get_Cancer_datasets(csv_full_name, img_folder_full_name, num_training=16000,
             img = np.squeeze(np.delete(img, (1, 2, 3), 2))
         
         #crop the one channel image
-        img = crop_center(img, 280, 280)
-        
-        #random flip
-        coin = np.random.randint(0, 10)
-        if coin > 4:
-            img = np.fliplr(img)
+        #if mode != 'train':
+        #    img = crop_center(img, 224, 224)
         
         # record to compute mean and std
         original_img_list.append(img)
         
         # repeat channels
-        one_channel_img = np.expand_dims(img, axis=0)
-        three_channel_img = np.repeat(one_channel_img, 3, axis=0)
+        #if mode != 'train':
+        #    one_channel_img = np.expand_dims(img, axis=0)
+        #    three_channel_img = np.repeat(one_channel_img, 3, axis=0)
+        one_channel_img = np.expand_dims(img, axis=2)
+        three_channel_img = np.repeat(one_channel_img, 3, axis=2)
         
         #add to final list
         img_list.append(three_channel_img)
@@ -116,14 +146,20 @@ def get_Cancer_datasets(csv_full_name, img_folder_full_name, num_training=16000,
     std = np.std(X_original)
     print('std:{}'.format(std))
 
-    X = X.astype(float)
-    X -= mean
-    X /= std
+    #print('Applying mean and std')
+    #X = X.astype(float)
+    #X -= mean
+    #X /= std
     print('Done transforming...')
     
     # return x and ids in csv
     if mode != 'train':
-        return torch.autograd.Variable(torch.from_numpy(X).float(), requires_grad=False), csv
+        #print('Applying mean and std')
+        #X = X.astype(float)
+        #X -= mean
+        #X /= std
+        #return torch.autograd.Variable(torch.from_numpy(X).float(), requires_grad=False), csv
+        return CancerDataUpload(X), csv
         
     print('Getting labels')
     label_list = []
@@ -148,7 +184,12 @@ def get_Cancer_datasets(csv_full_name, img_folder_full_name, num_training=16000,
     
     print('OK...')
     
-    return (CancerData(torch.from_numpy(X_train).float(), y_train),
-            CancerData(torch.from_numpy(X_val).float(), y_val),
-            CancerData(torch.from_numpy(X_test).float(), y_test),
+    #return (CancerData(torch.from_numpy(X_train).float(), y_train),
+    #        CancerData(torch.from_numpy(X_val).float(), y_val),
+    #        CancerData(torch.from_numpy(X_test).float(), y_test),
+    #       y_train)
+    
+    return (CancerData(X_train, y_train),
+            CancerData(X_val, y_val),
+            CancerData(X_test, y_test),
             y_train)
