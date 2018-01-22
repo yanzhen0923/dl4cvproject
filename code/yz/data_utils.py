@@ -54,7 +54,7 @@ class CancerDataUpload(data.Dataset):
         self.std = 0.25
         self.transform = Compose([
                             ToPILImage(),
-                            CenterCrop(224),
+                            RandomCrop(224),
                             ToTensor(),
                             Normalize(mean=[self.mean, self.mean, self.mean], std=[self.std, self.std, self.std])
                             ])
