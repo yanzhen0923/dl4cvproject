@@ -96,24 +96,6 @@ def data_augmentation(data,fractions):
 
     transform = transforms.Compose([transforms.ToPILImage()])
 
-    # transform1 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.4,contrast = 0.1),
-    #                                  transforms.RandomCrop(224), transforms.Resize(256)])
-    # transform2 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness=0.6, contrast=0.3),
-    #                                  transforms.RandomCrop(224), transforms.Resize(256)])
-    # transform3 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.2,contrast = 0.1),
-    #                                  transforms.RandomCrop(224), transforms.Resize(256)])
-    # transform4 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.3,contrast = 0.5),
-    #                                  transforms.RandomCrop(224), transforms.Resize(256)])
-    # transform5 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.7,contrast = 0.1),
-    #                                  transforms.RandomCrop(224), transforms.Resize(256)])
-    # transform6 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.4,contrast = 0.2),
-    #                                  transforms.RandomCrop(224), transforms.Resize(256)])
-    # transform7 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.4,contrast = 0.4),
-    #                                  transforms.RandomCrop(224), transforms.Resize(256)])
-    # transform8 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.7,contrast = 0.7),
-    #                                  transforms.RandomCrop(224), transforms.Resize(256)])
-    # transform9 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.3,contrast = 0.9),
-    #                                  transforms.RandomCrop(224), transforms.Resize(256)])
     transform10 =transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.1,contrast = 0.1),
                                      transforms.RandomCrop(224), transforms.Resize(256)])
     trsfmToTensor = transforms.ToTensor()
@@ -121,7 +103,7 @@ def data_augmentation(data,fractions):
 
     #TrsfmS = [transform1,transform2,transform3, transform4,transform5, transform6,transform7, transform8,transform9, transform10]
 
-    for i in range(10):
+    for i in range(original_length):
         print(i)
         sample,label = data[i]
         if fractions[label] < 0.05:
@@ -134,19 +116,20 @@ def data_augmentation(data,fractions):
                 # print(type(sample),sample.shape)
                 aug_PIL = transform10(sample)
                 # convert PIL to torch.FloatTensor of shape (C x H x W) in the range [0.0, 1.0].
-                aug_TorchTensor = trsfmToTensor(aug_PIL)
+                #aug_TorchTensor = trsfmToTensor(aug_PIL)
                 #print(type(aug_TorchTensor),aug_TorchTensor.shape)
-                plt.imshow(aug_PIL)
-                plt.show()
-                aug_sample = np.array(aug_TorchTensor)
+                #plt.imshow(aug_PIL)
+                #plt.show()
+                #aug_sample = np.array(aug_TorchTensor)
+                aug_np = np.array(aug_PIL)
                 # print(aug_sample)
                 #print(type(aug_sample),aug_sample.shape)
-                aug_sample.resize([1, 3, aug_sample.shape[1], aug_sample.shape[2]])
+                aug_np.resize([1, 3, 256, 256])
                 #print(type(aug_sample), aug_sample.shape)
-                data.X = np.concatenate((data.X, aug_sample), axis=0)
-                print('append aug img...')
+                data.X = np.concatenate((data.X, aug_np), axis=0)
+
                 data.y = np.append(data.y, label)
-                print('append lable...')
+
             # To show original image, convert to PIL image first
             #img = transform(sample)
             #plt.imshow(img)
@@ -202,6 +185,7 @@ def read_cancer_dataset(csv_full_name,
     print('Total good data size: ',total_GoodImg)
 
     X = np.array(img_list)
+    X = X/255.0
     #print(X.shape,type(X))
 
     class_statistics = []
