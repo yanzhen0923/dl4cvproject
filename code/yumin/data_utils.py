@@ -41,13 +41,12 @@ class CancerData(data.Dataset):
     def __len__(self):
         return len(self.y)
 
-def norm_split_Data(aug_data):
+def norm_split_data(aug_data):
     print('Nomralize data ...')
     mean = np.mean(aug_data.X)
     print('mean:{}'.format(mean))
     normData = aug_data.X - mean
-    std = np.std(aug_data.X,axis=(0,1,2,3))
-    #std = np.std(aug_data.X,axis=(0,2,3))
+    std = np.std(aug_data.X)
     print('std:{}'.format(std))
     normData = normData/std
     print('Done nomralize data')
@@ -75,19 +74,17 @@ def norm_split_Data(aug_data):
     y_test = y[mask]
     print('OK...')
 
-    # return (CancerData(X_train,y_train),
-    #         CancerData(X_val,y_val),
-    #         CancerData(X_test,y_test))
     return (CancerData(torch.from_numpy(X_train).float(), y_train),
             CancerData(torch.from_numpy(X_val).float(), y_val),
             CancerData(torch.from_numpy(X_test).float(), y_test),
-            y_train)
+            )
 
 
 def data_augmentation(data,fractions):
 
     """
-       Augment image data.
+       Augment image data in range [0,1].
+       data.X = N * C * W * H
        Return all data incl. augmented data but without normalization.
     """
 
@@ -119,10 +116,11 @@ def data_augmentation(data,fractions):
                                    transforms.RandomCrop(224), transforms.Resize(256)])
     transform10 =transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.1,contrast = 0.1),
                                    transforms.RandomCrop(224), transforms.Resize(256)])
+    trsfmToTensor = transforms.ToTensor()
 
 
     TrsfmS = [transform1,transform2,transform3, transform4,transform5, transform6,transform7, transform8,transform9, transform10]
-    #debug: range(10)
+
     for i in range(original_length):
         sample,label = data[i]
         if fractions[label] < 0.05:
@@ -132,10 +130,18 @@ def data_augmentation(data,fractions):
                 #aug_sample = np.array(trsfm(sample))
             # Select transform10 to do transform 10 times, add to data.
             for j in range(10):
-                aug_sample = np.array(transform10(sample))
+               # print(type(sample),sample.shape)
+                aug_PIL = transform10(sample)
+                # convert PIL to torch.FloatTensor of shape (C x H x W) in the range [0.0, 1.0].
+                aug_TorchTensor = trsfmToTensor(aug_PIL)
+                #print(type(aug_TorchTensor),aug_TorchTensor.shape)
                 #plt.imshow(aug_sample)
                 #plt.show()
-                aug_sample.resize([1, 1, aug_sample.shape[0], aug_sample.shape[1]])
+                aug_sample = np.array(aug_TorchTensor)
+                # print(aug_sample)
+                #print(type(aug_sample),aug_sample.shape)
+                aug_sample.resize([1, 3, aug_sample.shape[1], aug_sample.shape[2]])
+                #print(type(aug_sample), aug_sample.shape)
                 data.X = np.concatenate((data.X, aug_sample), axis=0)
                 data.y = np.append(data.y, label)
             # To show original image, convert to PIL image first
@@ -144,7 +150,7 @@ def data_augmentation(data,fractions):
             #plt.show()
             print("=============================================")
 
-    if len(data.X != data.y):
+    if len(data.X) != len(data.y):
         print('Error in data augmentation, dimension of X and y not same')
     else:
         print('OK...')
@@ -153,11 +159,11 @@ def data_augmentation(data,fractions):
 
 # train, val, test partition in folder train256
 # In total, 18577 images in train256
-def read_Cancer_datasets(csv_full_name,
+def read_cancer_dataset(csv_full_name,
                         img_folder_full_name):
     
     """
-    Load and preprocess the Cancer dataset.
+    Load and preprocess the Cancer dataset, throw out bad data.
     Return class statistics and dataset without augmentation nor normalization.
     """
     csv = pd.read_csv(csv_full_name)
@@ -185,19 +191,15 @@ def read_Cancer_datasets(csv_full_name,
             num_bad = num_bad + 1
             print('bad image: ',fullname,'total bad images: ',num_bad)
         # This if only for debug
-        if idx > 1000:
-            break
+        #if idx > 1000:
+        #    break
         idx =  idx + 1
 
     total_GoodImg = idx + 1 - num_bad
     print('Total good data size: ',total_GoodImg)
-    
-    print('Scale to [0,1]...')
+
     X = np.array(img_list)
-    print(X.shape,type(X))
-    X = X / 255.0
-    #X = X.astype(float)
-    print('Done Scale to [0,1]')
+    #print(X.shape,type(X))
 
     class_statistics = []
     for i in range(14):
@@ -211,16 +213,16 @@ def read_Cancer_datasets(csv_full_name,
             label = int(class_str[6:]) - 1
             class_statistics[label] = class_statistics[label]+1
             label_list.append(label)
-        if idx > 1000:
-            break
+        #if idx > 1000:
+        #    break
         idx = idx + 1
 
     for i in range(14):
         class_statistics[i] = class_statistics[i]/total_GoodImg
-        print(class_statistics[i])
+        #print(class_statistics[i])
 
     y = np.array(label_list)
-    print('label shape',y.shape)
+    #print('label shape',y.shape)
 
     print('OK...')
 
