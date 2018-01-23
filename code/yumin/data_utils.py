@@ -24,7 +24,7 @@ class OverfitSampler(object):
     def __len__(self):
         return self.num_samples
 
-    
+
 class CancerData(data.Dataset):
 
     def __init__(self, X, y):
@@ -96,54 +96,57 @@ def data_augmentation(data,fractions):
 
     transform = transforms.Compose([transforms.ToPILImage()])
 
-    transform1 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.4,contrast = 0.1),
-                                   transforms.RandomCrop(224), transforms.Resize(256)])
-    transform2 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness=0.6, contrast=0.3),
-                                     transforms.RandomCrop(224), transforms.Resize(256)])
-    transform3 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.2,contrast = 0.1),
-                                   transforms.RandomCrop(224), transforms.Resize(256)])
-    transform4 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.3,contrast = 0.5),
-                                   transforms.RandomCrop(224), transforms.Resize(256)])
-    transform5 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.7,contrast = 0.1),
-                                   transforms.RandomCrop(224), transforms.Resize(256)])
-    transform6 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.4,contrast = 0.2),
-                                   transforms.RandomCrop(224), transforms.Resize(256)])
-    transform7 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.4,contrast = 0.4),
-                                   transforms.RandomCrop(224), transforms.Resize(256)])
-    transform8 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.7,contrast = 0.7),
-                                   transforms.RandomCrop(224), transforms.Resize(256)])
-    transform9 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.3,contrast = 0.9),
-                                   transforms.RandomCrop(224), transforms.Resize(256)])
+    # transform1 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.4,contrast = 0.1),
+    #                                  transforms.RandomCrop(224), transforms.Resize(256)])
+    # transform2 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness=0.6, contrast=0.3),
+    #                                  transforms.RandomCrop(224), transforms.Resize(256)])
+    # transform3 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.2,contrast = 0.1),
+    #                                  transforms.RandomCrop(224), transforms.Resize(256)])
+    # transform4 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.3,contrast = 0.5),
+    #                                  transforms.RandomCrop(224), transforms.Resize(256)])
+    # transform5 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.7,contrast = 0.1),
+    #                                  transforms.RandomCrop(224), transforms.Resize(256)])
+    # transform6 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.4,contrast = 0.2),
+    #                                  transforms.RandomCrop(224), transforms.Resize(256)])
+    # transform7 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.4,contrast = 0.4),
+    #                                  transforms.RandomCrop(224), transforms.Resize(256)])
+    # transform8 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.7,contrast = 0.7),
+    #                                  transforms.RandomCrop(224), transforms.Resize(256)])
+    # transform9 = transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.3,contrast = 0.9),
+    #                                  transforms.RandomCrop(224), transforms.Resize(256)])
     transform10 =transforms.Compose([transforms.ToPILImage(), transforms.ColorJitter(brightness = 0.1,contrast = 0.1),
-                                   transforms.RandomCrop(224), transforms.Resize(256)])
+                                     transforms.RandomCrop(224), transforms.Resize(256)])
     trsfmToTensor = transforms.ToTensor()
 
 
-    TrsfmS = [transform1,transform2,transform3, transform4,transform5, transform6,transform7, transform8,transform9, transform10]
+    #TrsfmS = [transform1,transform2,transform3, transform4,transform5, transform6,transform7, transform8,transform9, transform10]
 
-    for i in range(original_length):
+    for i in range(10):
+        print(i)
         sample,label = data[i]
         if fractions[label] < 0.05:
             print('augment image i = ',i)
             # Test different transforms:
             #for trsfm in TrsfmS:
-                #aug_sample = np.array(trsfm(sample))
+            #aug_sample = np.array(trsfm(sample))
             # Select transform10 to do transform 10 times, add to data.
             for j in range(10):
-               # print(type(sample),sample.shape)
+                # print(type(sample),sample.shape)
                 aug_PIL = transform10(sample)
                 # convert PIL to torch.FloatTensor of shape (C x H x W) in the range [0.0, 1.0].
                 aug_TorchTensor = trsfmToTensor(aug_PIL)
                 #print(type(aug_TorchTensor),aug_TorchTensor.shape)
-                #plt.imshow(aug_sample)
-                #plt.show()
+                plt.imshow(aug_PIL)
+                plt.show()
                 aug_sample = np.array(aug_TorchTensor)
                 # print(aug_sample)
                 #print(type(aug_sample),aug_sample.shape)
                 aug_sample.resize([1, 3, aug_sample.shape[1], aug_sample.shape[2]])
                 #print(type(aug_sample), aug_sample.shape)
                 data.X = np.concatenate((data.X, aug_sample), axis=0)
+                print('append aug img...')
                 data.y = np.append(data.y, label)
+                print('append lable...')
             # To show original image, convert to PIL image first
             #img = transform(sample)
             #plt.imshow(img)
@@ -161,13 +164,13 @@ def data_augmentation(data,fractions):
 # In total, 18577 images in train256
 def read_cancer_dataset(csv_full_name,
                         img_folder_full_name):
-    
+
     """
     Load and preprocess the Cancer dataset, throw out bad data.
     Return class statistics and dataset without augmentation nor normalization.
     """
     csv = pd.read_csv(csv_full_name)
-    
+
     img_list = []
 
     num_bad = 0
@@ -175,7 +178,7 @@ def read_cancer_dataset(csv_full_name,
     idx = 0
 
     for img_name in tqdm(csv['image_name'].values):
-        
+
         fullname = os.path.join(img_folder_full_name, img_name)
         img = scipy.misc.imread(fullname)
 
