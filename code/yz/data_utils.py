@@ -34,7 +34,9 @@ class CancerData(data.Dataset):
         self.transform = Compose([
                             ToPILImage(),
                             RandomCrop(224),
-                            ColorJitter(brightness=0.4, contrast=0.4),
+                            RandomRotation([270,90,180,0], resample=False, expand=False, center=None),
+                            RandomHorizontalFlip(),
+                            #ColorJitter(brightness=0.4, contrast=0.4),
                             ToTensor(),
                             Normalize(mean=[self.mean, self.mean, self.mean], std=[self.std, self.std, self.std])
                             ])
