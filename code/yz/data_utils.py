@@ -34,7 +34,7 @@ class CancerData(data.Dataset):
         self.transform = Compose([
                             ToPILImage(),
                             RandomCrop(224),
-                            ColorJitter(brightness=0.2, contrast=0.2),
+                            ColorJitter(brightness=0.4, contrast=0.4),
                             ToTensor(),
                             Normalize(mean=[self.mean, self.mean, self.mean], std=[self.std, self.std, self.std])
                             ])
@@ -76,9 +76,12 @@ def get_balanced_weights(label_list, num_classes):
     weight_per_class = [0.] * num_classes                                      
     N = float(sum(count))                                                   
     for i in range(num_classes):                                                   
-        weight_per_class[i] = N/ (70 * np.sqrt(float(count[i])))
+        weight_per_class[i] = 100 / (72 * np.power(float(count[i]), 0.77))
         
     print('weights: {}'.format(weight_per_class))
+    print('equivalent_num:')
+    for i in range(len(count)):
+        print(weight_per_class[i] * count[i])
     
     #assign weights for each data entry
     weights = [0] * len(label_list)                                     

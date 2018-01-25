@@ -10,7 +10,7 @@ class Solver(object):
 
     def __init__(self, optim=torch.optim.Adam, optim_args={},
                  loss_func=torch.nn.CrossEntropyLoss()):
-        self.default_adam_args = {"lr": 1e-7,
+        self.default_adam_args = {"lr": 4e-5,
                          "betas": (0.9, 0.999),
                          "eps": 1e-8,
                          "weight_decay": 1e-4}
@@ -50,7 +50,7 @@ class Solver(object):
         dataset_loader['val'] = val_loader
         dset_sizes = {x: len(dataset_loader[x]) for x in ['train', 'val']}
         t = 0
-        optim = self.optim(model.classifier.parameters(), **self.optim_args)
+        optim = self.optim(model.parameters(), **self.optim_args)
         self._reset_histories()
         iter_per_epoch = len(train_loader)
         num_iterations = num_epochs * iter_per_epoch

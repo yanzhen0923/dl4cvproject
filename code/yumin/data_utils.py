@@ -103,7 +103,8 @@ def data_augmentation(data,fractions):
 
     #TrsfmS = [transform1,transform2,transform3, transform4,transform5, transform6,transform7, transform8,transform9, transform10]
 
-    for i in range(original_length):
+    #for i in range(original_length):
+    for i in range(1000):
         print(i)
         sample,label = data[i]
         if fractions[label] < 0.05:
@@ -122,9 +123,10 @@ def data_augmentation(data,fractions):
                 #plt.show()
                 #aug_sample = np.array(aug_TorchTensor)
                 aug_np = np.array(aug_PIL)
+                print(aug_np.shape)
                 # print(aug_sample)
                 #print(type(aug_sample),aug_sample.shape)
-                aug_np.resize([1, 3, 256, 256])
+                aug_np = aug_np.resize([1, 3, 256, 256])
                 #print(type(aug_sample), aug_sample.shape)
                 data.X = np.concatenate((data.X, aug_np), axis=0)
 
@@ -135,6 +137,8 @@ def data_augmentation(data,fractions):
             #plt.imshow(img)
             #plt.show()
             print("=============================================")
+        else:
+            print('OK')
 
     if len(data.X) != len(data.y):
         print('Error in data augmentation, dimension of X and y not same')
@@ -177,8 +181,8 @@ def read_cancer_dataset(csv_full_name,
             num_bad = num_bad + 1
             print('bad image: ',fullname,'total bad images: ',num_bad)
         # This if only for debug
-        #if idx > 1000:
-        #    break
+        if idx > 1000:
+            break
         idx =  idx + 1
 
     total_GoodImg = idx + 1 - num_bad
@@ -200,8 +204,8 @@ def read_cancer_dataset(csv_full_name,
             label = int(class_str[6:]) - 1
             class_statistics[label] = class_statistics[label]+1
             label_list.append(label)
-        #if idx > 1000:
-        #    break
+        if idx > 1000:
+            break
         idx = idx + 1
 
     for i in range(14):
