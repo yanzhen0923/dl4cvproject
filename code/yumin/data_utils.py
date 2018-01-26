@@ -12,20 +12,6 @@ import torchvision.transforms as transforms
 from shutil import copyfile
 import glob
 
-class OverfitSampler(object):
-    """
-    Sample dataset to overfit.
-    """
-    def __init__(self, num_samples):
-        self.num_samples = num_samples
-
-    def __iter__(self):
-        return iter(range(self.num_samples))
-
-    def __len__(self):
-        return self.num_samples
-
-
 class CancerData(data.Dataset):
 
     def __init__(self, X, y):
@@ -100,9 +86,18 @@ def norm_split_data(data,num_classes):
             CancerData(X_test, y_test),
             train_aug_fractions
             )
-# 3.Step run Augmentor in prepare folder
-# 4.Step 
-def data_augmentation(data,img_name_list,fractions):
+
+
+def data_augmentation1(data,img_name_list,num_classes):
+    for i in range(num_classes):
+        augmentorFiles=glob.glob('/home/ubuntu/dl4cvproject/data/train_classes/'+i+'/output/*.JPEG')
+        img_name_list.append(img_name)
+        img = scipy.misc.imread(fullname)
+    
+    
+    return data
+
+def data_augmentation2(data,img_name_list,fractions):
 
     """
        Augment image data with probability by defining step in loop: for i in range(start,stop,step)
@@ -124,36 +119,30 @@ def data_augmentation(data,img_name_list,fractions):
                                      transforms.Resize(256),
                                      ])
 
-    for i in range(original_length):
-    #for i in range(10):
+    #for i in range(original_length):
+    for i in range(10):
         print(i)
         sample,label = data[i]
         print(type(sample),sample.shape)
-        
-        if fractions[label] < 0.05:
-            print('augment image i = ',i)
-            for j in range(12):
-                aug_PIL = transform10(sample)
-                aug_torchTensor = trsfmToTensor(aug_PIL)
+        num_aug = int(np.floor((6000-1000-statistics[label]*2)/(statistics[label]*2)))
+        print('augment image i = ',i)
+        for j in range(num_aug-1):
+            aug_PIL = transform10(sample)
+            aug_torchTensor = trsfmToTensor(aug_PIL)
+            print(type(aug_torchTensor))
+            print(aug_torchTensor.shape)
+            data.X.append(aug_torchTensor)
+            data.y.append(label)
+        print("=============================================")
 
-                print(type(aug_torchTensor))
-                print(aug_torchTensor.shape)
-                data.X.append(aug_torchTensor)
-                data.y.append(label)
-
-                # To show original image, convert to PIL image first
-                #img = transform(sample)
-                #plt.imshow(img)
-                #plt.show()
-                print("=============================================")
-        else:
-            print('OK')
 
     if len(data.X) != len(data.y):
         print('Error in data augmentation, dimension of X and y not same')
     else:
         print('OK...')
+        
     return data
+
 # 2.Step
 def devide_dataset_in_class_folders_and_duplicate_small_classes(data,img_name_list,num_classes,fractions):
     """
@@ -171,6 +160,7 @@ def devide_dataset_in_class_folders_and_duplicate_small_classes(data,img_name_li
     original_length = len(data)
     
     for i in range(original_length):
+        # Move
         sample,label=data[i]
         print('label: ',label)
         src = os.path.join('/home/ubuntu/dl4cvproject/data/train256',img_name_list[i])
@@ -179,7 +169,15 @@ def devide_dataset_in_class_folders_and_duplicate_small_classes(data,img_name_li
         copyfile(src,dst1)
         data.X.append(sample)
         data.y.append(label)
-        
+        # Duplicate
+        dst2='/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)+'/2nd'+ img_name_list[i]
+        copyfile(src,dst2)
+        print('Copy from ',src,' to ',dst2,' ...')
+        dup_img_name = '2nd'+ img_name_list[i]
+        img_name_list.append(dup_img_name)
+        data.X.append(sample)
+        data.y.append(label)
+        """
         print('duplicate small classes...')
         if fractions[label]<0.02 :
             print('duplicate small classes 5 times:',label)
@@ -268,7 +266,7 @@ def devide_dataset_in_class_folders_and_duplicate_small_classes(data,img_name_li
             print('append:')
             data.X.append(sample)
             data.y.append(label)
-                           
+        """                      
     print('OK...')
     return duplicate_data
 
