@@ -19,6 +19,14 @@ def main():
 		new_img = scipy.misc.imresize(imageio.imread(fullname), (256, 256))
 		hist_img = exposure.equalize_hist(new_img)
 		scipy.misc.imsave(os.path.join(prefixTr256, img_path), hist_img)
+    
+    #p=Augmentor.Pipeline(prefixTr256)
+    #p.rotate90(probability=0.3)
+    #p.rotate270(probability=0.3)
+    #p.flip_left_right(probability=0.3)
+    #p.flip_top_bottom(probability=0.3)
+    #p.sample(1000)
+        
 
 if __name__ == '__main__':
     main()

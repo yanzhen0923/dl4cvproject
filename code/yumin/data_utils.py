@@ -7,6 +7,7 @@ import torch.utils.data as data
 import pandas as pd
 from tqdm import tqdm
 import scipy.misc
+import Augmentor
 
 import torchvision
 import torchvision.transforms as transforms
@@ -86,6 +87,7 @@ def data_augmentation(data,fractions):
        Augment image data.
        data.X = a list of torch Tensor in scale range [0,1]
        Return aug. dataset incl. augmented data but without normalization.
+       make classes to be 1:2
     """
 
     plt.rcParams['figure.figsize'] = (10.0, 8.0)  # set default size of plots
@@ -97,7 +99,6 @@ def data_augmentation(data,fractions):
     transform = transforms.Compose([transforms.ToPILImage()])
     trsfmToTensor = transforms.ToTensor()
     transform10 =transforms.Compose([transforms.ToPILImage(), 
-                                     #transforms.ColorJitter(brightness = 0.1,contrast = 0.1),
                                      transforms.RandomCrop(224), 
                                      transforms.Resize(256),
                                      ])
