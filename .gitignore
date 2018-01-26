@@ -18,3 +18,4 @@ data/
 code/yumin/.ipynb_checkpoints/
 code/yumin/__pycache__/
 code/yumin/aug_data.pickle
+code/yz/__pycache__/*
