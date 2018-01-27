@@ -24,25 +24,37 @@ class OverfitSampler(object):
         return self.num_samples
 
     
-class CancerData(data.Dataset):
+class CancerDataTrain(data.Dataset):
 
     def __init__(self, X, y):
         self.X = X
         self.y = y
-        self.mean = 0.48
-        self.std = 0.25
         self.transform = Compose([
                             ToPILImage(),
                             RandomCrop(224),
-                            RandomRotation([0, 359], resample=False, expand=False, center=None),
                             RandomHorizontalFlip(),
-                            #ColorJitter(brightness=0.4, contrast=0.4),
-                            ToTensor(),
-                            Normalize(mean=[self.mean, self.mean, self.mean], std=[self.std, self.std, self.std])
+                            ColorJitter(brightness=0.3, contrast=0.3),
+                            ToTensor()
                             ])
         
     def __getitem__(self, index):
-        #return self.X[index], self.y[index]
+        return self.transform(self.X[index]), self.y[index]
+
+    def __len__(self):
+        return len(self.y)
+
+class CancerDataVT(data.Dataset):
+
+    def __init__(self, X, y):
+        self.X = X
+        self.y = y
+        self.transform = Compose([
+                            ToPILImage(),
+                            CenterCrop(224),
+                            ToTensor()
+                            ])
+        
+    def __getitem__(self, index):
         return self.transform(self.X[index]), self.y[index]
 
     def __len__(self):
@@ -52,23 +64,19 @@ class CancerDataUpload(data.Dataset):
 
     def __init__(self, X):
         self.X = X
-        self.mean = 0.48
-        self.std = 0.25
         self.transform = Compose([
                             ToPILImage(),
-                            RandomCrop(224),
-                            ToTensor(),
-                            Normalize(mean=[self.mean, self.mean, self.mean], std=[self.std, self.std, self.std])
+                            CenterCrop(224),
+                            ToTensor()
                             ])
         
     def __getitem__(self, index):
-        #return self.X[index], self.y[index]
         return self.transform(self.X[index])
 
     def __len__(self):
         return self.X.shape[0]
     
-def get_balanced_weights(label_list, num_classes):
+def get_balanced_weights(label_list, num_classes, factor=0.7):
     # count class appearance
     count = [0] * num_classes                                                      
     for label in label_list:                                                         
@@ -78,7 +86,7 @@ def get_balanced_weights(label_list, num_classes):
     weight_per_class = [0.] * num_classes                                      
     N = float(sum(count))                                                   
     for i in range(num_classes):                                                   
-        weight_per_class[i] = 100 / (72 * np.power(float(count[i]), 0.77))
+        weight_per_class[i] = 100 / (72 * np.power(float(count[i]), factor))
         
     print('weights: {}'.format(weight_per_class))
     print('equivalent_num:')
@@ -94,14 +102,14 @@ def get_balanced_weights(label_list, num_classes):
     
 
 
-def crop_center(img, cropx, cropy):
-    y,x = img.shape
-    startx = x//2-(cropx//2)
-    starty = y//2-(cropy//2)    
-    return img[starty:starty+cropy,startx:startx+cropx]
+#def crop_center(img, cropx, cropy):
+#    y,x = img.shape
+#    startx = x//2-(cropx//2)
+#    starty = y//2-(cropy//2)    
+#    return img[starty:starty+cropy,startx:startx+cropx]
     
-def get_Cancer_datasets(csv_full_name, img_folder_full_name, num_training=16000, num_validation=1250,
-                         num_test=1327, mode='train', dtype=np.float32):
+def get_Cancer_datasets(csv_full_name, img_folder_full_name, num_training=13000, num_validation=1857,
+                         num_test=3720, mode='train', dtype=np.float32):
     
     debug_cnt = 0
     """
@@ -118,18 +126,7 @@ def get_Cancer_datasets(csv_full_name, img_folder_full_name, num_training=16000,
         if len(img.shape) != 2:
             # 4 channels to 1 channel
             img = np.squeeze(np.delete(img, (1, 2, 3), 2))
-        
-        #crop the one channel image
-        #if mode != 'train':
-        #    img = crop_center(img, 224, 224)
-        
-        # record to compute mean and std
-        original_img_list.append(img)
-        
-        # repeat channels
-        #if mode != 'train':
-        #    one_channel_img = np.expand_dims(img, axis=0)
-        #    three_channel_img = np.repeat(one_channel_img, 3, axis=0)
+            
         one_channel_img = np.expand_dims(img, axis=2)
         three_channel_img = np.repeat(one_channel_img, 3, axis=2)
         
@@ -141,29 +138,9 @@ def get_Cancer_datasets(csv_full_name, img_folder_full_name, num_training=16000,
         
     print('transforming...')
     X = np.array(img_list)
-    X_original = np.array(original_img_list)
-    print('X.shape:{}'.format(X.shape))
-    print('X_original.shape:{}'.format(X_original.shape))
-    
-    # Normalize the data
-    mean = np.mean(X_original)
-    print('mean:{}'.format(mean))
-    std = np.std(X_original)
-    print('std:{}'.format(std))
-
-    #print('Applying mean and std')
-    #X = X.astype(float)
-    #X -= mean
-    #X /= std
     print('Done transforming...')
     
-    # return x and ids in csv
     if mode != 'train':
-        #print('Applying mean and std')
-        #X = X.astype(float)
-        #X -= mean
-        #X /= std
-        #return torch.autograd.Variable(torch.from_numpy(X).float(), requires_grad=False), csv
         return CancerDataUpload(X), csv
         
     print('Getting labels')
@@ -189,12 +166,7 @@ def get_Cancer_datasets(csv_full_name, img_folder_full_name, num_training=16000,
     
     print('OK...')
     
-    #return (CancerData(torch.from_numpy(X_train).float(), y_train),
-    #        CancerData(torch.from_numpy(X_val).float(), y_val),
-    #        CancerData(torch.from_numpy(X_test).float(), y_test),
-    #       y_train)
-    
-    return (CancerData(X_train, y_train),
-            CancerData(X_val, y_val),
-            CancerData(X_test, y_test),
+    return (CancerDataTrain(X_train, y_train),
+            CancerDataVT(X_val, y_val),
+            CancerDataVT(X_test, y_test),
             y_train)
