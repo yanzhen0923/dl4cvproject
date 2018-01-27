@@ -18,7 +18,7 @@ class Solver(object):
         self.default_sgd_args = {"lr":1e-5, 
                         "momentum":0.9}
         optim_args_merged = self.default_adam_args.copy()
-        #optim_args_merged.update(optim_args)
+        optim_args_merged.update(optim_args)
         self.optim_args = optim_args_merged
         self.optim = optim
         self.loss_func = loss_func
@@ -97,7 +97,7 @@ class Solver(object):
                 running_corrects = 0
 
                 # iterate over the corresponding data in each phase
-                for iter, data in tqdm(enumerate(dataset_loader[phase])):
+                for iter, data in enumerate(dataset_loader[phase]):
 
                     inputs, labels = data
                     # set gradients to zero for each mini_batch iteration !

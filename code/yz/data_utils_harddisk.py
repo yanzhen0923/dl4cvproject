@@ -23,12 +23,21 @@ class OverfitSampler(object):
     def __len__(self):
         return self.num_samples
 
+def get_3_channel_image(img):
+    if len(img.shape) != 2:
+        img = np.squeeze(np.delete(img, (1, 2, 3), 2))
+        
+    one_channel_img = np.expand_dims(img, axis=2)
+    three_channel_img = np.repeat(one_channel_img, 3, axis=2)
     
+    return three_channel_img
+
 class CancerDataTrain(data.Dataset):
 
-    def __init__(self, X, y):
-        self.X = X
-        self.y = y
+    def __init__(self, root, img_name_list, label_list):
+        self.label_list = label_list
+        self.img_name_list = img_name_list
+        self.root = root
         self.transform = Compose([
                             ToPILImage(),
                             RandomCrop(224),
@@ -38,16 +47,22 @@ class CancerDataTrain(data.Dataset):
                             ])
         
     def __getitem__(self, index):
-        return self.transform(self.X[index]), self.y[index]
+        
+        fullname = os.path.join(self.root, self.img_name_list[index])
+        img = scipy.misc.imread(fullname)
+        img = get_3_channel_image(img)
+        
+        return self.transform(img), self.label_list[index]
 
     def __len__(self):
-        return len(self.y)
+        return len(self.label_list)
 
 class CancerDataVT(data.Dataset):
 
-    def __init__(self, X, y):
-        self.X = X
-        self.y = y
+    def __init__(self, root, img_name_list, label_list):
+        self.label_list = label_list
+        self.img_name_list = img_name_list
+        self.root = root
         self.transform = Compose([
                             ToPILImage(),
                             CenterCrop(224),
@@ -55,15 +70,22 @@ class CancerDataVT(data.Dataset):
                             ])
         
     def __getitem__(self, index):
-        return self.transform(self.X[index]), self.y[index]
+        
+        fullname = os.path.join(self.root, self.img_name_list[index])
+        img = scipy.misc.imread(fullname)
+        img = get_3_channel_image(img)
+        
+        return self.transform(img), self.label_list[index]
 
     def __len__(self):
-        return len(self.y)
+        return len(self.label_list)
+
     
 class CancerDataUpload(data.Dataset):
 
-    def __init__(self, X):
-        self.X = X
+    def __init__(self, root, img_name_list):
+        self.img_name_list = img_name_list
+        self.root = root
         self.transform = Compose([
                             ToPILImage(),
                             CenterCrop(224),
@@ -71,10 +93,16 @@ class CancerDataUpload(data.Dataset):
                             ])
         
     def __getitem__(self, index):
-        return self.transform(self.X[index])
+        
+        fullname = os.path.join(self.root, self.img_name_list[index])
+        img = scipy.misc.imread(fullname)
+        img = get_3_channel_image(img)
+        
+        return self.transform(img)
 
     def __len__(self):
-        return self.X.shape[0]
+        return len(self.img_name_list)
+
     
 def get_balanced_weights(label_list, num_classes, factor=0.7):
     # count class appearance
@@ -116,57 +144,29 @@ def get_Cancer_datasets(csv_full_name, img_folder_full_name, num_training=13000,
     Load and preprocess the Cancer dataset.
     """
     csv = pd.read_csv(csv_full_name)
-    
-    img_list = []
-    original_img_list = []
-    for img_name in tqdm(csv['image_name'].values):
-        debug_cnt += 1
-        fullname = os.path.join(img_folder_full_name, img_name)
-        img = scipy.misc.imread(fullname)
-        if len(img.shape) != 2:
-            # 4 channels to 1 channel
-            img = np.squeeze(np.delete(img, (1, 2, 3), 2))
-            
-        one_channel_img = np.expand_dims(img, axis=2)
-        three_channel_img = np.repeat(one_channel_img, 3, axis=2)
-        
-        #add to final list
-        img_list.append(three_channel_img)
-        
-        if debug_cnt == num_training + num_validation + num_test:
-            break
-        
-    print('transforming...')
-    X = np.array(img_list)
-    print('Done transforming...')
+    img_name_list = csv['image_name'].tolist()
     
     if mode != 'train':
-        return CancerDataUpload(X), csv
-        
-    print('Getting labels')
+        return CancerDataUpload(img_folder_full_name, img_name_list), csv
+    
     label_list = []
     for class_str in tqdm(csv['detected'].values):
         label_list.append(int(class_str[6:]) - 1)
-    y = np.array(label_list)
     
-    print('submasking...')
-    
-    # Subsample the data
     print('num_training:{}'.format(num_training))
-    mask = range(num_training)
-    X_train = X[mask]
-    y_train = y[mask]
-    mask = range(num_training, num_training + num_validation)
-    X_val = X[mask]
-    y_val = y[mask]
-    mask = range(num_training + num_validation,
-                 num_training + num_validation + num_test)
-    X_test = X[mask]
-    y_test = y[mask]
+    print('num_validation:{}'.format(num_validation))
+    print('num_test:{}'.format(num_test))
+    
+    img_name_train = img_name_list[0:num_training]
+    label_train = label_list[0:num_training]
+    img_name_val = img_name_list[num_training:num_training + num_validation]
+    label_val = label_list[num_training:num_training + num_validation]
+    img_name_test = img_name_list[num_training + num_validation:-1]
+    label_test = label_list[num_training + num_validation:-1]
     
     print('OK...')
     
-    return (CancerDataTrain(X_train, y_train),
-            CancerDataVT(X_val, y_val),
-            CancerDataVT(X_test, y_test),
-            y_train)
+    return (CancerDataTrain(img_folder_full_name, img_name_train, label_train),
+            CancerDataVT(img_folder_full_name, img_name_val, label_val),
+            CancerDataVT(img_folder_full_name, img_name_test, label_test),
+            label_train)
