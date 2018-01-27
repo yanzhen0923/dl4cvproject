@@ -28,7 +28,7 @@ class CancerData(data.Dataset):
     def __len__(self):
         return len(self.y)
 
-def norm_split_data(data,statistics):
+def norm_split_data(data,fractions):
     """
        Normalize data with mean and std, then split in train,val,test.
        aug_data: augmented Cancer dataset, data.X is a list of torch Tensor in scale range [0,1], data.y is a list.
@@ -44,24 +44,7 @@ def norm_split_data(data,statistics):
     normData = normData/std
     print('Done nomralize data.')
 
-    print('Splitting dataset...')   
-    
-    # Compute dataset class fractions
-    num_classes = len(statistics)
-    class_statistics = []
-    class_fractions =[]
-    for i in range(num_classes):
-        class_statistics.append(0)
-        class_fractions.append(0)
-        
-    for label in data.y:
-        class_statistics[label] = class_statistics[label]+1
-        
-    for i in range(num_classes):
-        class_fractions[i] = class_statistics[i]/len(data)
-        
-    print('class_fractions:',class_fractions)
-
+    print('Splitting dataset...')    
     # Split the data set into Train,Val,Test with 0.7,0.1,0.2
     y = data.y
 
@@ -85,19 +68,18 @@ def norm_split_data(data,statistics):
     return (CancerData(X_train, y_train),
             CancerData(X_val, y_val),
             CancerData(X_test, y_test),
-            train_aug_fractions
+            fractions
             )
 
 #4th.Step, before this run ImgAugmentation.py in terminal.
-def append_augmented_data(data,old_statistics):
+def append_augmented_data(data,statistics):
     length=len(data)
-    old_total=sum(old_statistics)
+    old_total=sum(statistics)
     if length != old_total:
         print('Error in append_augmented_data 1...')
         return
     
-    num_classes=len(old_statistics)
-    new_statistics = [0]*num_classes
+    num_classes=len(statistics)
     new_fractions = [0.0]*num_classes
     
     for c in range(num_classes):
@@ -106,25 +88,25 @@ def append_augmented_data(data,old_statistics):
             img = scipy.misc.imread(f)
             data.X.append(img)
             data.y.append(c)
-            new_statistics[c]=old_statistics[c]+1
+            statistics[c]=statistics[c]+1
             print(f,' is appended to dataset with label ',c)
-    new_total=sum(new_statistics)
+    new_total=sum(statistics)
 
     for i in range(num_classes):
-        new_fractions[i]=new_statistics[i]/new_total
+        new_fractions[i]=statistics[i]/new_total
     
     if new_total != len(data):
         print('Error in append_augmented_data 2...')
     else:
         print(new_total-old_total,' new data appended to dataset...')
-        print('New statistics:',new_statistics)
-        print('New fractions:',new_fractions)
-        print('OK...')
+        print('New statistics after run ImgAugmentor.py:',statistics)
+        print('New fractions after run ImgAugmentor.py:',new_fractions)
+        print('append_augmented_data is OK...')
         
-    return data,new_statistics,new_fractions
+    return data,statistics,new_fractions
 
 # 5th. Step
-def data_augmentation(data,old_statistics):
+def data_augmentation(data,statistics):
 
     """
        Augment image data with probability by defining step in loop: for i in range(start,stop,step)
@@ -138,11 +120,12 @@ def data_augmentation(data,old_statistics):
     plt.rcParams['image.cmap'] = 'gray'
     """
     length=len(data)
-    old_total=sum(old_statistics)
+    old_total=sum(statistics)
     if length != old_total:
         print('Error in data_augmentation 1...')
         return
-
+    else:
+        print('Start brightness,randomcrop augmentation...')
     
     trsfmToPIL= transforms.Compose([transforms.ToPILImage()])
     trsfmToTensor = transforms.ToTensor()
@@ -151,16 +134,15 @@ def data_augmentation(data,old_statistics):
                                      transforms.RandomCrop(224), 
                                      transforms.Resize(256),
                                      ])
-    max_class_size = max(old_statistics)
-    num_classes = len(old_statistics)
+    max_class_size = max(statistics)
+    num_classes = len(statistics)
     num_aug = [0]*num_classes
     num_trsfm_for_each_img =[0]*num_classes
     new_fractions =[0.0]*num_classes
-    new_statistics = [0]*num_classes
     
     for c in range(num_classes):
-        num_aug[c] = max_class_size-old_statistics[c]
-        num_trsfm_for_each_img[c] = int(np.floor(num_aug[c]/old_statistics[c]))-1
+        num_aug[c] = max_class_size-statistics[c]
+        num_trsfm_for_each_img[c] = int(np.floor(num_aug[c]/statistics[c]))-1
         print('For class ',c,', we need ',num_trsfm_for_each_img[c],' new augmented images')
     
     for i in range(old_total):
@@ -177,51 +159,50 @@ def data_augmentation(data,old_statistics):
             print(aug_torchTensor.shape)
             data.X.append(aug_torchTensor)
             data.y.append(label)
-            new_statistics = old_statistics + 1
+            statistics = statistics + 1
         print("=============================================")
-    new_total = sum(new_statistics)
+    new_total = sum(statistics)
     for i in range(num_classes):
-        new_fractions = new_statistics/new_total
+        new_fractions = statistics/new_total
         
     if len(data.X) != len(data.y):
-        print('Error in data augmentation, dimension of X and y not same')
+        print('Error in data augmentation 2...')
     elif len(data) != new_total:
-        print('Error in data augmentation2...')
+        print('Error in data augmentation 3...')
     else:
         print(new_total-old_total,' new data appended to dataset...')
-        print('New statistics:',new_statistics)
-        print('New fractions:',new_fractions)
-        print('OK...')
-        
-    return data, new_statistics,new_fractions
+        print('New statistics after brightness,randomcrop augmentation:',statistics)
+        print('New fractions  after brightness,randomcrop augmentation:',new_fractions)
+        print('Brightness,randomcrop augmentation is OK...')   
+        return data, statistics,new_fractions
 
 # 2.Step
-def devide_dataset_in_class_folders_and_duplicate_small_classes(data,num_classes,fractions,statistics):
+def devide_dataset_in_class_folders_and_duplicate_small_classes(data,old_fractions,statistics):
     """
     Copy the images in folder train256 to corresponding class folder in '/home/ubuntu/dl4cvproject/data/train_classes/'.
     Duplicate image i/data.X[i]/data.y[i], if i is from small class.
     
     Return a Cancer dataset, which appended with duplicated data.
     """
+    length=len(data)
+    old_total=sum(statistics)
+    if length != old_total:
+        print('Error in devide_dataset_in_class_folders_and_duplicate_small_classes 1...')
+        return
+    else:
+        print('Start devide_dataset_in_class_folders_and_duplicate_small_classes...')
+    
+    num_classes = len(statistics)
+    
     for i in range(num_classes):
         print('Make train_classes dir:')
         if not os.path.exists('/home/ubuntu/dl4cvproject/data/train_classes/'+str(i)):
             os.makedirs('/home/ubuntu/dl4cvproject/data/train_classes/'+str(i))
     print('Make dir finished...')
+
+    new_fractions =[0.0]*num_classes
     
-    original_length = sum(statistics)
-    """
-    src = '/home/ubuntu/dl4cvproject/data/train256'
-    dest= '/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)
-    src_files = os.listdir(src)
-    for file_name in src_files:
-        full_file_name = os.path.join(src, file_name)
-        if (os.path.isfile(full_file_name)):
-            shutil.copy(full_file_name, dest)
-    """
-    
-    
-    for i in range(original_length):
+    for i in range(old_total):
         # Move i
         sample,label=data[i]
         print('label: ',label)
@@ -239,16 +220,25 @@ def devide_dataset_in_class_folders_and_duplicate_small_classes(data,num_classes
             data.y.append(label)
             statistics[label]=statistics[label]+1
             
-        print('End for loop...')
+    print('End for loop...')
               
-    print('statistics after duplicate:',statistics)
-    total_length= sum(statistics)
-    print(total_length-original_length,' is appended to dataset...')img_name_list[i]
+    new_total= sum(statistics)
+
     for i in range(num_classes):
-        fractions[i] = statistics[i]/total_length
-    print('fractions after duplicate:',fractions)
-    print('OK...')
-    return duplicate_data,statistics,fractions
+        new_fractions[i] = statistics[i]/new_total
+        
+    if len(data.X) != len(data.y):
+        print('Error in devide_dataset_in_class_folders_and_duplicate_small_classes 2...')
+        return
+    elif len(data) != new_total:
+        print('Error in devide_dataset_in_class_folders_and_duplicate_small_classes 3...')
+        return
+    else:
+        print(new_total-old_total,' new data appended to dataset...')
+        print('statistics after duplicate:',statistics)
+        print('fractions after duplicate:',new_fractions)
+        print('Devide_dataset_in_class_folders_and_duplicate_small_classes is OK...')
+        return duplicate_data,statistics,new_fractions
 
 # 1.Step
 # train, val, test partition in folder train256
@@ -320,12 +310,20 @@ def read_cancer_dataset(csv_full_name,
         #    break
         idx = idx + 1
 
-    if total_GoodImg != sum(class_statistics):
-        print('1.Error: number of images is not same...')
-        
     for i in range(14):
         class_fractions[i] = class_statistics[i]/total_GoodImg
-
-    print('OK...')
-
-    return CancerData(img_list, label_list),class_statistics,class_fractions,img_name_list
+        
+    if len(data.X) != len(data.y):
+        print('Error in read_cancer_dataset 1...')
+        return
+    elif total_GoodImg != sum(class_statistics):
+        print('Error in read_cancer_dataset 2...')
+        return
+    elif len(data) != total_GoodImg:
+        print('Error in read_cancer_dataset 3...')
+        return
+    else:
+        print('statistics after read_cancer_dataset:',class_statistics)
+        print('fractions after read_cancer_dataset:',class_fractions)
+        print('Read_cancer_dataset is OK...')
+        return CancerData(img_list, label_list),class_statistics,class_fractions,img_name_list
