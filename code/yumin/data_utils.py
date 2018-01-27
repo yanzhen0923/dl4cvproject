@@ -28,7 +28,7 @@ class CancerData(data.Dataset):
     def __len__(self):
         return len(self.y)
 
-def norm_split_data(data,num_classes):
+def norm_split_data(data,statistics):
     """
        Normalize data with mean and std, then split in train,val,test.
        aug_data: augmented Cancer dataset, data.X is a list of torch Tensor in scale range [0,1], data.y is a list.
@@ -47,6 +47,7 @@ def norm_split_data(data,num_classes):
     print('Splitting dataset...')   
     
     # Compute dataset class fractions
+    num_classes = len(statistics)
     class_statistics = []
     class_fractions =[]
     for i in range(num_classes):
@@ -87,64 +88,115 @@ def norm_split_data(data,num_classes):
             train_aug_fractions
             )
 
+#4th.Step, before this run ImgAugmentation.py in terminal.
+def append_augmented_data(data,old_statistics):
+    length=len(data)
+    old_total=sum(old_statistics)
+    if length != old_total:
+        print('Error in append_augmented_data 1...')
+        return
+    
+    num_classes=len(old_statistics)
+    new_statistics = [0]*num_classes
+    new_fractions = [0.0]*num_classes
+    
+    for c in range(num_classes):
+        files=glob.glob('/home/ubuntu/dl4cvproject/data/train_classes/'+c+'/output/*.JPEG')
+        for f in files:
+            img = scipy.misc.imread(f)
+            data.X.append(img)
+            data.y.append(c)
+            new_statistics[c]=old_statistics[c]+1
+            print(f,' is appended to dataset with label ',c)
+    new_total=sum(new_statistics)
 
-def data_augmentation1(data,img_name_list,num_classes):
     for i in range(num_classes):
-        augmentorFiles=glob.glob('/home/ubuntu/dl4cvproject/data/train_classes/'+i+'/output/*.JPEG')
-        img_name_list.append(img_name)
-        img = scipy.misc.imread(fullname)
+        new_fractions[i]=new_statistics[i]/new_total
     
-    
-    return data
+    if new_total != len(data):
+        print('Error in append_augmented_data 2...')
+    else:
+        print(new_total-old_total,' new data appended to dataset...')
+        print('New statistics:',new_statistics)
+        print('New fractions:',new_fractions)
+        print('OK...')
+        
+    return data,new_statistics,new_fractions
 
-def data_augmentation2(data,img_name_list,fractions):
+# 5th. Step
+def data_augmentation(data,old_statistics):
 
     """
        Augment image data with probability by defining step in loop: for i in range(start,stop,step)
        data: Cancer dataset, data.X is a list of torch Tensor in scale range [0,1], data.y is a list.
        Return augmented dataset without normalization.
     """
-
+    
+    """
     plt.rcParams['figure.figsize'] = (10.0, 8.0)  # set default size of plots
     plt.rcParams['image.interpolation'] = 'nearest'
     plt.rcParams['image.cmap'] = 'gray'
+    """
+    length=len(data)
+    old_total=sum(old_statistics)
+    if length != old_total:
+        print('Error in data_augmentation 1...')
+        return
 
-    original_length = len(data)
-
-    transform = transforms.Compose([transforms.ToPILImage()])
+    
+    trsfmToPIL= transforms.Compose([transforms.ToPILImage()])
     trsfmToTensor = transforms.ToTensor()
-    transform10 =transforms.Compose([transforms.ToPILImage(),
+    transform =transforms.Compose([transforms.ToPILImage(),
                                      transforms.ColorJitter(brightness=0.5),
                                      transforms.RandomCrop(224), 
                                      transforms.Resize(256),
                                      ])
-
-    #for i in range(original_length):
-    for i in range(10):
+    max_class_size = max(old_statistics)
+    num_classes = len(old_statistics)
+    num_aug = [0]*num_classes
+    num_trsfm_for_each_img =[0]*num_classes
+    new_fractions =[0.0]*num_classes
+    new_statistics = [0]*num_classes
+    
+    for c in range(num_classes):
+        num_aug[c] = max_class_size-old_statistics[c]
+        num_trsfm_for_each_img[c] = int(np.floor(num_aug[c]/old_statistics[c]))-1
+        print('For class ',c,', we need ',num_trsfm_for_each_img[c],' new augmented images')
+    
+    for i in range(old_total):
+    #for i in range(10):
         print(i)
         sample,label = data[i]
         print(type(sample),sample.shape)
-        num_aug = int(np.floor((6000-1000-statistics[label]*2)/(statistics[label]*2)))
+        
         print('augment image i = ',i)
-        for j in range(num_aug-1):
-            aug_PIL = transform10(sample)
+        for j in range(num_trsfm_for_each_img[c]):
+            aug_PIL = transform(sample)
             aug_torchTensor = trsfmToTensor(aug_PIL)
             print(type(aug_torchTensor))
             print(aug_torchTensor.shape)
             data.X.append(aug_torchTensor)
             data.y.append(label)
+            new_statistics = old_statistics + 1
         print("=============================================")
-
-
+    new_total = sum(new_statistics)
+    for i in range(num_classes):
+        new_fractions = new_statistics/new_total
+        
     if len(data.X) != len(data.y):
         print('Error in data augmentation, dimension of X and y not same')
+    elif len(data) != new_total:
+        print('Error in data augmentation2...')
     else:
+        print(new_total-old_total,' new data appended to dataset...')
+        print('New statistics:',new_statistics)
+        print('New fractions:',new_fractions)
         print('OK...')
         
-    return data
+    return data, new_statistics,new_fractions
 
 # 2.Step
-def devide_dataset_in_class_folders_and_duplicate_small_classes(data,img_name_list,num_classes,fractions):
+def devide_dataset_in_class_folders_and_duplicate_small_classes(data,num_classes,fractions,statistics):
     """
     Copy the images in folder train256 to corresponding class folder in '/home/ubuntu/dl4cvproject/data/train_classes/'.
     Duplicate image i/data.X[i]/data.y[i], if i is from small class.
@@ -155,120 +207,48 @@ def devide_dataset_in_class_folders_and_duplicate_small_classes(data,img_name_li
         print('Make train_classes dir:')
         if not os.path.exists('/home/ubuntu/dl4cvproject/data/train_classes/'+str(i)):
             os.makedirs('/home/ubuntu/dl4cvproject/data/train_classes/'+str(i))
-    print('Make dir prepare finished...')
+    print('Make dir finished...')
     
-    original_length = len(data)
+    original_length = sum(statistics)
+    """
+    src = '/home/ubuntu/dl4cvproject/data/train256'
+    dest= '/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)
+    src_files = os.listdir(src)
+    for file_name in src_files:
+        full_file_name = os.path.join(src, file_name)
+        if (os.path.isfile(full_file_name)):
+            shutil.copy(full_file_name, dest)
+    """
+    
     
     for i in range(original_length):
-        # Move
+        # Move i
         sample,label=data[i]
         print('label: ',label)
         src = os.path.join('/home/ubuntu/dl4cvproject/data/train256',img_name_list[i])
         dst1 = '/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)+'/'+ img_name_list[i]
-        print('Copy from ',src,' to ',dst1,' ...')
+        print('Move from ',src,' to ',dst1,' ...')
         copyfile(src,dst1)
-        data.X.append(sample)
-        data.y.append(label)
-        # Duplicate
-        dst2='/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)+'/2nd'+ img_name_list[i]
-        copyfile(src,dst2)
-        print('Copy from ',src,' to ',dst2,' ...')
-        dup_img_name = '2nd'+ img_name_list[i]
-        img_name_list.append(dup_img_name)
-        data.X.append(sample)
-        data.y.append(label)
-        """
-        print('duplicate small classes...')
-        if fractions[label]<0.02 :
-            print('duplicate small classes 5 times:',label)
+
+        # Duplicate i
+        if fractions[label]<0.1:
             dst2='/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)+'/2nd'+ img_name_list[i]
-            dst3='/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)+'/3rd'+ img_name_list[i]
-            dst4='/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)+'/4th'+ img_name_list[i]
-            dst5='/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)+'/5th'+ img_name_list[i]
-            dst6='/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)+'/6th'+ img_name_list[i]
-            copyfile(src,dst2)
-            copyfile(src,dst3)
-            copyfile(src,dst4)
-            copyfile(src,dst5)
-            copyfile(src,dst6)
-            print('Copy from ',src,' to ',dst2,' ...')
-            print('Copy from ',src,' to ',dst3,' ...')
-            print('Copy from ',src,' to ',dst4,' ...')
-            print('Copy from ',src,' to ',dst5,' ...')
-            print('Copy from ',src,' to ',dst6,' ...')
-            for c in range(4):
-                print('append:',c)
-                data.X.append(sample)
-                data.y.append(label)
-            
-        if fractions[label]<0.04 and fractions[label]>0.02 :
-            print('duplicate small classes 4 times:',label)
-            dst2='/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)+'/2nd'+ img_name_list[i]
-            dst3='/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)+'/3rd'+ img_name_list[i]
-            dst4='/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)+'/4th'+ img_name_list[i]
-            dst5='/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)+'/5th'+ img_name_list[i]
-            copyfile(src,dst2)
-            copyfile(src,dst3)
-            copyfile(src,dst4)
-            copyfile(src,dst5)
-            print('Copy from ',src,' to ',dst2,' ...')
-            print('Copy from ',src,' to ',dst3,' ...')
-            print('Copy from ',src,' to ',dst4,' ...')
-            print('Copy from ',src,' to ',dst5,' ...')
-            for c in range(3):
-                print('append:',c)
-                data.X.append(sample)
-                data.y.append(label)
-                
-        if fractions[label]<0.06 and fractions[label]>0.04 :
-            print('duplicate small classes 3 times:',label)
-            dst2='/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)+'/2nd'+ img_name_list[i]
-            dst3='/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)+'/3rd'+ img_name_list[i]
-            dst4='/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)+'/4th'+ img_name_list[i]
-
-            copyfile(src,dst2)
-            copyfile(src,dst3)
-            copyfile(src,dst4)
-
-            print('Copy from ',src,' to ',dst2,' ...')
-            print('Copy from ',src,' to ',dst3,' ...')
-            print('Copy from ',src,' to ',dst4,' ...')
-
-            for c in range(2):
-                print('append:',c)
-                data.X.append(sample)
-                data.y.append(label)
-
-        if fractions[label]<0.08and fractions[label]>0.06:
-            print('duplicate small classes twice:',label)
-            dst2='/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)+'/2nd'+ img_name_list[i]
-            dst3='/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)+'/3rd'+ img_name_list[i]
-
-            copyfile(src,dst2)
-            copyfile(src,dst3)
-
-            print('Copy from ',src,' to ',dst2,' ...')
-            print('Copy from ',src,' to ',dst3,' ...')
-
-            for c in range(1):
-                print('append:',c)
-                data.X.append(sample)
-                data.y.append(label)
-                
-        if fractions[label]<0.1 and fractions[label]>0.08:
-            print('duplicate small classes 1 time:',label)
-            dst2='/home/ubuntu/dl4cvproject/data/train_classes/'+str(label)+'/2nd'+ img_name_list[i]
-
-            copyfile(src,dst2)
-
-            print('Copy from ',src,' to ',dst2,' ...')
-
-            print('append:')
+            copyfile(src,dst)
+            print('Duplicate from ',src,' to ',dst2,' ...')
             data.X.append(sample)
             data.y.append(label)
-        """                      
+            statistics[label]=statistics[label]+1
+            
+        print('End for loop...')
+              
+    print('statistics after duplicate:',statistics)
+    total_length= sum(statistics)
+    print(total_length-original_length,' is appended to dataset...')img_name_list[i]
+    for i in range(num_classes):
+        fractions[i] = statistics[i]/total_length
+    print('fractions after duplicate:',fractions)
     print('OK...')
-    return duplicate_data
+    return duplicate_data,statistics,fractions
 
 # 1.Step
 # train, val, test partition in folder train256
@@ -288,14 +268,14 @@ def read_cancer_dataset(csv_full_name,
     csv = pd.read_csv(csv_full_name)
 
     img_list = []
-    img_name_list = []
+    img_name_list=[]
     num_bad = 0
     good_mask = []
     idx = 0
 
     for img_name in tqdm(csv['image_name'].values):
+        
         fullname = os.path.join(img_folder_full_name, img_name)
-        img_name_list.append(img_name)
         img = scipy.misc.imread(fullname)
 
         if len(img.shape) == 2:
@@ -308,11 +288,13 @@ def read_cancer_dataset(csv_full_name,
             three_channel_img_tensor = trsfmToTensor(three_channel_img)
             img_list.append(three_channel_img_tensor)
             good_mask.append(True)
+            img_name_list.append(img_name)
 
         else:
             good_mask.append(False)
             num_bad = num_bad + 1
-            print('bad image: ',fullname,'total bad images: ',num_bad)
+            os.remove(fullname)
+            print('delete bad image ',fullname)
         # This if only for debug
         #if idx > 100:
         #    break
@@ -321,11 +303,8 @@ def read_cancer_dataset(csv_full_name,
     total_GoodImg = idx + 1 - num_bad
     print('Total good data size: ',total_GoodImg)
 
-    class_statistics = []
-    class_fractions =[]
-    for i in range(14):
-        class_statistics.append(0)
-        class_fractions.append(0)
+    class_statistics = [0]*num_classes
+    class_fractions =[0.0]*_num_classes
 
     label_list = []
     idx = 0
@@ -334,13 +313,19 @@ def read_cancer_dataset(csv_full_name,
             label = int(class_str[6:]) - 1
             class_statistics[label] = class_statistics[label]+1
             label_list.append(label)
+        else:
+            print('A bad image does not append label to label_list...')
+        
         #if idx > 100:
         #    break
         idx = idx + 1
 
+    if total_GoodImg != sum(class_statistics):
+        print('1.Error: number of images is not same...')
+        
     for i in range(14):
         class_fractions[i] = class_statistics[i]/total_GoodImg
 
     print('OK...')
 
-    return CancerData(img_list, label_list),img_name_list,class_statistics,class_fractions
+    return CancerData(img_list, label_list),class_statistics,class_fractions,img_name_list
