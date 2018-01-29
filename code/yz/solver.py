@@ -51,6 +51,7 @@ class Solver(object):
         dset_sizes = {x: len(dataset_loader[x]) for x in ['train', 'val']}
         t = 0
         optim = self.optim(model.parameters(), **self.optim_args)
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optim, milestones=[2, 4, 8, 16], gamma=0.1)
         self._reset_histories()
         iter_per_epoch = len(train_loader)
         num_iterations = num_epochs * iter_per_epoch
@@ -133,6 +134,7 @@ class Solver(object):
 
                 epoch_loss = running_loss / dset_sizes[phase]
                 epoch_acc = running_corrects / dset_sizes[phase]
+                scheduler.step()
 
                 if phase == 'train':
                     self.train_acc_history.append(epoch_acc)
