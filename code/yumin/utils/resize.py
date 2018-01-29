@@ -6,14 +6,14 @@ from tqdm import tqdm
 from skimage import exposure
 
 def main():
-	#csvTe_name = '/home/ubuntu/dl4cvproject/data/test.csv'
+	#csvTe_name = '/Users/yuminsun/dl4cvproject/data/test.csv'
 	#test = pd.read_csv(csvTe_name)
-	#prefixTe = '/home/ubuntu/dl4cvproject/data/test_'
-	#prefixTe256 = '/home/ubuntu/dl4cvproject/data/test256'
-	csvTr_name = '/home/ubuntu/dl4cvproject/data/train.csv'
+	#prefixTe = '/Users/yuminsun/dl4cvproject/data/test_'
+	#prefixTe256 = '/Users/yuminsun/dl4cvproject/data/test256'
+	csvTr_name = '/Users/yuminsun/dl4cvproject/data/train.csv'
 	train = pd.read_csv(csvTr_name)
-	prefixTr = '/home/ubuntu/dl4cvproject/data/train_'
-	prefixTr256 = '/home/ubuntu/dl4cvproject/data/train256'
+	prefixTr = '/Users/yuminsun/dl4cvproject/data/train_'
+	prefixTr256 = '/Users/yuminsun/dl4cvproject/data/train256'
 	for img_path in tqdm(train['image_name'].values):
 		fullname = os.path.join(prefixTr, img_path)
 		new_img = scipy.misc.imresize(imageio.imread(fullname), (256, 256))
