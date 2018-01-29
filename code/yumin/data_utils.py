@@ -262,10 +262,11 @@ def read_cancer_dataset(csv_full_name,
     num_bad = 0
     good_mask = []
     idx = 0
+    bad_img_name_list = []
 
     for img_name in tqdm(csv['image_name'].values):
         
-        fullname = os.path.join(img_folder_full_name, img_name)
+        fullname = os.path.join(img_folder_full_name,img_name)
         img = scipy.misc.imread(fullname)
 
         if len(img.shape) == 2:
@@ -283,8 +284,8 @@ def read_cancer_dataset(csv_full_name,
         else:
             good_mask.append(False)
             num_bad = num_bad + 1
-            os.remove(fullname)
-            print('delete bad image ',fullname)
+            bad_img_name_list.append(img_name)
+            print('bad image ',img_name)
         # This if only for debug
         #if idx > 100:
         #    break
@@ -293,8 +294,10 @@ def read_cancer_dataset(csv_full_name,
     total_GoodImg = idx + 1 - num_bad
     print('Total good data size: ',total_GoodImg)
 
+    num_classes =14
+    
     class_statistics = [0]*num_classes
-    class_fractions =[0.0]*_num_classes
+    class_fractions =[0.0]*num_classes
 
     label_list = []
     idx = 0
@@ -326,4 +329,4 @@ def read_cancer_dataset(csv_full_name,
         print('statistics after read_cancer_dataset:',class_statistics)
         print('fractions after read_cancer_dataset:',class_fractions)
         print('Read_cancer_dataset is OK...')
-        return CancerData(img_list, label_list),class_statistics,class_fractions,img_name_list
+        return CancerData(img_list, label_list),class_statistics,class_fractions,img_name_list,bad_img_name_list
