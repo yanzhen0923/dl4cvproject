@@ -1,0 +1,16 @@
+We are using pytorch framework.
+
+For data pre-processing, we firstly compress the image from 1024 * 1024 to the size of 256 * 256, same for both train and test data.
+They are under /utilts folder.
+
+We use the pillow package to read the image and transform these into 3 channel images for training. 
+For data transforming, we do the followng:
+1. randomcrop to size 224 * 224 
+2. randomhorizontal flip
+3. normalize using the parameters from imagenet
+4. For prediction, no transform for randomhorizonal flips, other things are the same/.
+They are under code/yz/solver* and code/yumin/solver* with some duplicates
+
+We are trying pre-trained alexnet, vgg16, resnet{18, 34, 50, 101}, inceptionv3 and densenet121, it turns out that densenet121 fits well.
+
+For hypterparameters tunning, we are using bayesian_optimization. They are under code/online_bo* and final_project* with some duplicates.
