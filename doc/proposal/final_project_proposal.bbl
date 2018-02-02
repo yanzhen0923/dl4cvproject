@@ -1,0 +1,24 @@
+\begin{thebibliography}{1}\itemsep=-1pt
+
+\bibitem{dong2017learning}
+Y.~Dong, Y.~Pan, J.~Zhang, and W.~Xu.
+\newblock Learning to read chest x-ray images from 16000+ examples using cnn.
+\newblock In {\em Connected Health: Applications, Systems and Engineering
+  Technologies (CHASE), 2017 IEEE/ACM International Conference on}, pages
+  51--57. IEEE, 2017.
+
+\bibitem{esteva2017dermatologist}
+A.~Esteva, B.~Kuprel, R.~A. Novoa, J.~Ko, S.~M. Swetter, H.~M. Blau, and
+  S.~Thrun.
+\newblock Dermatologist-level classification of skin cancer with deep neural
+  networks.
+\newblock {\em Nature}, 542(7639):115--118, 2017.
+
+\bibitem{shin2016deep}
+H.-C. Shin, H.~R. Roth, M.~Gao, L.~Lu, Z.~Xu, I.~Nogues, J.~Yao, D.~Mollura,
+  and R.~M. Summers.
+\newblock Deep convolutional neural networks for computer-aided detection: Cnn
+  architectures, dataset characteristics and transfer learning.
+\newblock {\em IEEE transactions on medical imaging}, 35(5):1285--1298, 2016.
+
+\end{thebibliography}
