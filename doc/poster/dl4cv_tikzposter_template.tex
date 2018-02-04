@@ -94,7 +94,8 @@
 
 \begin{columns}
     \column{0.5}
-    \block{Introduction}{Disease type diagnosis from X-rays is of low-cost and simple. However, lack of experienced doctors and high miss misdiagnosed rates makes it a challenge. We tried different neural network models with our preprocessing dataset and data augmentation. Apart from that, we also used general patient information as additional inputs. For the training models, we tried Alexnet, VGG16 ,desnet121, Resnet18, Resnet34, Resnet50 and Resnet101 and use scalable weighted sample,Learning rate scheduler and Bayesian Optomization to get better accuarcy.}
+    \block{Introduction}{In our project we explore the possibility of designing computer aided diagnosis for chest X-rays using deep learning approach. We use 18,000+ chest X-ray-14 raw images provided from the Hackerearth Deep Learning Challenge Cup(HDLCC). The result is evaluated in the final off-line test set. The problems we meet in the development phase are unbalanced dataset and high variance. We tried with different CNN architectures, depth and regularization techniques to solve this problem. At last we reach 0.41 weighted f1 score on final off-line test set, with which we locate in the 20th place in the HDLCC(rank 20/151 solved/7079 participants).}
+    
     \block{Methodology}{
     \textbullet \textbf{Dataset}\\
     We use the dataset provided by hackerearth. Dataset includes X-ray pictures with disease labels and general information of the patients, i.e., gender and age. There are 14 types of different diseases in total.\\
