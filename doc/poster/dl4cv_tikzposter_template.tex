@@ -77,8 +77,8 @@
 % title matter
 \title{Disease Type Prediction}
 
-\author[1]{Yumin Sun}
 \author[1]{Zhen Yan}
+\author[1]{Yumin Sun}
 \author[1]{Yuchang Zhang}
 \author[1]{Xiaojing Li}
 
@@ -96,7 +96,7 @@
     \column{0.5}
     \block{Introduction}{In our project we explore the possibility of designing computer aided diagnosis for chest X-rays using deep learning approach. We use 18,000+ chest X-ray-14 raw images provided from the Hackerearth Deep Learning Challenge Cup(HDLCC). The result is evaluated in the final off-line test set. The problems we meet in the development phase are unbalanced dataset and high variance. We tried with different CNN architectures, depth and regularization techniques to solve this problem. At last we reach 0.41 weighted f1 score on final off-line test set, with which we locate in the 20th place in the HDLCC(rank 20/151 solved/7079 participants).}
     
-    \block{Methodology}{
+    \block{Data pre-processing and augmentation}{
     \textbullet \textbf{Dataset}\\
     We use the dataset provided by hackerearth. Dataset includes X-ray pictures with disease labels and general information of the patients, i.e., gender and age. There are 14 types of different diseases in total.\\
 $~~~~$ *Images: Each row of data has one X-ray image and its disease label.\\
