@@ -1,0 +1,138 @@
+\documentclass[25pt, a0paper, landscape]{tikzposter}
+\tikzposterlatexaffectionproofoff
+\usepackage[utf8]{inputenc}
+\usepackage{authblk}
+\makeatletter
+\renewcommand\maketitle{\AB@maketitle} % revert \maketitle to its old definition
+\renewcommand\AB@affilsepx{\quad\protect\Affilfont} % put affiliations into one line
+\makeatother
+\renewcommand\Affilfont{\Large} % set font for affiliations
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{tikz}
+\usepackage{pgfplots}
+% align columns of tikzposter; needs two compilations
+\usepackage[colalign]{column_aligned}
+
+% tikzposter meta settings
+\usetheme{Default}
+\usetitlestyle{Default}
+\useblockstyle{Default}
+
+%%%%%%%%%%% redefine title matter to include one logo on each side of the title; adjust with \LogoSep
+\makeatletter
+\newcommand\insertlogoi[2][]{\def\@insertlogoi{\includegraphics[#1]{#2}}}
+\newcommand\insertlogoii[2][]{\def\@insertlogoii{\includegraphics[#1]{#2}}}
+\newlength\LogoSep
+\setlength\LogoSep{-70pt}
+
+\renewcommand\maketitle[1][]{  % #1 keys
+    \normalsize
+    \setkeys{title}{#1}
+    % Title dummy to get title height
+    \node[inner sep=\TP@titleinnersep, line width=\TP@titlelinewidth, anchor=north, minimum width=\TP@visibletextwidth-2\TP@titleinnersep]
+    (TP@title) at ($(0, 0.5\textheight-\TP@titletotopverticalspace)$) {\parbox{\TP@titlewidth-2\TP@titleinnersep}{\TP@maketitle}};
+    \draw let \p1 = ($(TP@title.north)-(TP@title.south)$) in node {
+        \setlength{\TP@titleheight}{\y1}
+        \setlength{\titleheight}{\y1}
+        \global\TP@titleheight=\TP@titleheight
+        \global\titleheight=\titleheight
+    };
+
+    % Compute title position
+    \setlength{\titleposleft}{-0.5\titlewidth}
+    \setlength{\titleposright}{\titleposleft+\titlewidth}
+    \setlength{\titlepostop}{0.5\textheight-\TP@titletotopverticalspace}
+    \setlength{\titleposbottom}{\titlepostop-\titleheight}
+
+    % Title style (background)
+    \TP@titlestyle
+
+    % Title node
+    \node[inner sep=\TP@titleinnersep, line width=\TP@titlelinewidth, anchor=north, minimum width=\TP@visibletextwidth-2\TP@titleinnersep]
+    at (0,0.5\textheight-\TP@titletotopverticalspace)
+    (title)
+    {\parbox{\TP@titlewidth-2\TP@titleinnersep}{\TP@maketitle}};
+
+    \node[inner sep=0pt,anchor=west] 
+    at ([xshift=-\LogoSep]title.west)
+    {\@insertlogoi};
+
+    \node[inner sep=0pt,anchor=east] 
+    at ([xshift=\LogoSep]title.east)
+    {\@insertlogoii};
+
+    % Settings for blocks
+    \normalsize
+    \setlength{\TP@blocktop}{\titleposbottom-\TP@titletoblockverticalspace}
+}
+\makeatother
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% color handling
+\definecolor{TumBlue}{cmyk}{1,0.43,0,0}
+\colorlet{blocktitlebgcolor}{TumBlue}
+\colorlet{backgroundcolor}{white}
+
+% title matter
+\title{Disease Type Prediction}
+
+\author[1]{Yumin Sun}
+\author[1]{Zhen Yan}
+\author[1]{Yuchang Zhang}
+\author[1]{Xiaojing Li}
+
+\affil[1]{Technical University of Munich}
+
+\insertlogoi[width=15cm]{tum_logo}
+\insertlogoii[width=15cm]{tum_logo}
+
+% main document
+\begin{document}
+
+\maketitle
+
+\begin{columns}
+    \column{0.5}
+    \block{Abstract}{Disease type diagnosis from X-rays is of low-cost and simple. However, lack of experienced doctors and high miss misdiagnosed rates makes it a challenge. We tried different neural network models with our preprocessing dataset and data augmentation. For the training models, we tried Alexnet, VGG16 ,desnet121, Resnet18, Resnet34, Resnet50 and Resnet101 and use scalable weighted sample,Learning rate scheduler and Bayesian Optomization to get better accuarcy. we are in 20 position }
+    \block{Dataset}{
+     \begin{itemize}
+            \item  \textbf{Original Dataset}\\
+             We use the dataset provided by hackerearth. Dataset includes X-ray pictures with disease labels and general information of the patients, i.e., gender and age. There are 14 types of different diseases in total.\\
+\subitem {-Images}: Each row of data has one X-ray image and its disease label.\\
+	$~~~~~~$ ---18000 training images of size 1024*1024*1(4)\\%(One with X-ray pictures and disease labels. This other one includes general information of the patients, i.e., gender and age. )\\
+    $~~~~~~$ ---12000 prediction images of size 1024*1024*1(4)\\
+	\subitem {-Text in CSV format}: Each row of data has 6 rows, i.e., row id, age, gender, view position, image\_name, detected disease.\\
+             \item \textbf{Data preprocessing}\\
+    Downsample the image size from 1024*1024*3 to 256*256*3
+              \item \textbf{Augmentation}\\
+  By doing the following steps, we augment our images.Aim of step3 to 5 is to avoid overfitting.
+ 
+  \subitem  --- equalize histogram to increase contrast of the images.%此处有图片
+             \subitem {--- invert images to better extract the features}.%此处有图片
+              \subitem {--- random crop images to 224*224*3}.%此处有图片
+              \subitem  {--- random horizontal flip images with p=0.5}.%此处有图片
+               \subitem {--- color gitter with brightness=0.3}.%此处有图片
+                \subitem {--- normalization with mean=[0.485,0.456,0.406],std=[0.229,0.224,0.225]}.%此处有图片
+               \end{itemize} 
+                }
+  
+ 
+    \column{0.5}
+    \block{Methodology}{\item \textbf{Architecture}
+     We designed scalable weighted sample to balance the difference of numbers of differenttypes of diesease. Learning rate scheduler is used to accelerate the convergence speed of neural network and Bayesian Optomization is aimed to get better accuarcy.\\
+     \subitem{--- Scalable weighted random sample}\\
+    In order to balance the difference of the total number of different types of disease.
+    $$y=\alpha x_{i}^\beta, \ \alpha = \sqrt{{\max{(x_{i})}}}$$
+    where 
+    $x_{i}$:original number of images of ith disearse, $\beta \in [0.5, 1.2]$ is paramter, $y_{i}$is number of images of ith disearse after weighted.\\
+    
+    \subitem{--- Learning rate scheduler}\\
+    decrease the step size scalarly to accelerate the convergence speed of neural network and get better result.\\
+     \subitem{--- Bayesian Optimization}\\
+    Optimatize a blackbox, where we input the range of paramters and get better accuacy with the respective paramters.}
+    \block{Generalization Results}{Content in your block.}
+    \block{Conclusion}{Content in your block.}
+\end{columns}
+
+\end{document}
